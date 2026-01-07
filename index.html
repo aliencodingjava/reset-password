@@ -91,6 +91,7 @@
       font-size: 13px;
       line-height: 1.35;
       background: rgba(255,255,255,.04);
+      white-space: pre-wrap;
     }
 
     .row{
@@ -111,29 +112,35 @@
 
     input{
       width: 100%;
-      padding: 12px 44px 12px 12px;
+      padding: 12px 58px 12px 12px;
       border-radius: 14px;
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,.05);
       color: var(--text);
       outline: none;
       font-size: 14px;
+      position: relative;
+      z-index: 1;
     }
     input:focus{
       border-color: rgba(96,165,250,.55);
       box-shadow: 0 0 0 4px rgba(59,130,246,.15);
     }
 
+    /* ✅ real button, always clickable on mobile */
     .toggle{
       position:absolute;
       right: 10px;
       top: 50%;
       transform: translateY(-50%);
+      z-index: 5;
+      pointer-events: auto;
+
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,.06);
       color: var(--text);
       border-radius: 10px;
-      padding: 6px 8px;
+      padding: 6px 10px;
       font-size: 12px;
       cursor:pointer;
       user-select:none;
@@ -247,26 +254,24 @@
       <div class="logo" aria-hidden="true"></div>
       <div>
         <h1>Reset your password</h1>
-        <p class="sub">Enter a new password for your account. This page works only from the reset email link.</p>
+        <p class="sub">Open this page from the reset email link, then set a new password.</p>
       </div>
     </div>
 
     <div class="content">
-      <div class="notice" id="notice">
-        Checking recovery session…
-      </div>
+      <div class="notice" id="notice">Loading…</div>
 
       <div class="row">
         <label for="password">New password</label>
         <div class="field">
           <input id="password" type="password" placeholder="At least 6 characters" autocomplete="new-password" />
-          <span class="toggle" id="toggle1" role="button" tabindex="0">Show</span>
+          <button class="toggle" id="toggle1" type="button">Show</button>
         </div>
 
         <label for="confirm">Confirm new password</label>
         <div class="field">
           <input id="confirm" type="password" placeholder="Repeat password" autocomplete="new-password" />
-          <span class="toggle" id="toggle2" role="button" tabindex="0">Show</span>
+          <button class="toggle" id="toggle2" type="button">Show</button>
         </div>
 
         <div class="strength">
@@ -275,8 +280,8 @@
         </div>
 
         <div class="actions">
-          <button class="primary" id="btn" onclick="resetPassword()">Update password</button>
-          <button class="secondary" onclick="window.close()">Close</button>
+          <button class="primary" id="btn" type="button">Update password</button>
+          <button class="secondary" type="button" onclick="window.close()">Close</button>
         </div>
 
         <div class="msg info" id="msg"></div>
@@ -284,26 +289,27 @@
     </div>
 
     <div class="footer">
-      <span>Powered by Supabase recovery session</span>
+      <span>Supabase password recovery</span>
       <span><a href="#" onclick="location.reload(); return false;">Refresh</a></span>
     </div>
   </div>
 
 <script>
-  // ✅ Your real Supabase Project URL
+  // ✅ Your Supabase Project URL
   const SUPABASE_URL = "https://gdvhiudodnqdqhkyghsk.supabase.co";
-
-  // ✅ Your anon/publishable key (safe to use in public)
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkdmhpdWRvZG5xZHFoa3lnaHNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMTI2MTksImV4cCI6MjA2NDU4ODYxOX0.p9P-Hv4r-C9eZU3Dz-kX9U2iv8PUAKaUU5qZGPMJ844";
+  // ✅ anon/publishable key (safe in public)
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkdmhpdWRvZG5xZHFoa3lnaHNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMTI2MTksImV4cCI6MjA2NDU4ODYxOX0.p9P-Hv4r-C9eZU3Dz-kX9U2iv8PUAKaUU5qZGPMJ844";
 
   const $ = (id) => document.getElementById(id);
+
+  const notice = $("notice");
   const msg = $("msg");
   const btn = $("btn");
   const pass = $("password");
   const confirm = $("confirm");
   const fill = $("fill");
   const strengthText = $("strengthText");
-  const notice = $("notice");
 
   function setMsg(type, text){
     msg.className = "msg " + type;
@@ -315,6 +321,126 @@
     msg.textContent = "";
     msg.className = "msg info";
   }
+
+  // ✅ Ensure Supabase loaded
+  if (!window.supabase || !window.supabase.createClient) {
+    notice.textContent = "❌ Supabase JS failed to load.";
+    setMsg("error", "Supabase library not loaded. Check your internet and reload.");
+    btn.disabled = true;
+    throw new Error("Supabase global not found");
+  }
+
+  // ✅ Correct CDN global: window.supabase
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
+  });
+
+  // Show/Hide
+  function bindToggle(toggleId, inputEl){
+    const t = $(toggleId);
+    t.addEventListener("click", () => {
+      const isPw = inputEl.type === "password";
+      inputEl.type = isPw ? "text" : "password";
+      t.textContent = isPw ? "Hide" : "Show";
+    });
+  }
+  bindToggle("toggle1", pass);
+  bindToggle("toggle2", confirm);
+
+  // Strength meter
+  function strengthScore(p){
+    let s = 0;
+    if (!p) return 0;
+    if (p.length >= 6) s++;
+    if (p.length >= 10) s++;
+    if (/[A-Z]/.test(p)) s++;
+    if (/[0-9]/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p)) s++;
+    return Math.min(5, s);
+  }
+  function updateStrength(){
+    const p = pass.value || "";
+    const s = strengthScore(p);
+    fill.style.width = ((s / 5) * 100) + "%";
+    const label = ["—", "Weak", "OK", "Good", "Strong", "Very strong"][s];
+    strengthText.textContent = "Strength: " + label;
+  }
+  pass.addEventListener("input", updateStrength);
+  updateStrength();
+
+  // Session detection
+  let hasSession = false;
+  async function refreshSession(){
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    hasSession = !!data?.session;
+    return hasSession;
+  }
+
+  async function updateBanner(){
+    try{
+      const ok = await refreshSession();
+      if (ok){
+        notice.textContent = "✅ Recovery session detected. You can update your password.";
+        btn.disabled = false;
+      } else {
+        notice.textContent =
+          "⚠️ No recovery session.\nYou MUST open this page from the reset email link (not directly).";
+        btn.disabled = true;
+      }
+    } catch(e){
+      notice.textContent = "❌ Failed to check session.";
+      setMsg("error", "Session check error: " + (e?.message || String(e)));
+      btn.disabled = true;
+    }
+  }
+
+  // Run on load
+  updateBanner();
+
+  // Update password
+  btn.addEventListener("click", async () => {
+    clearMsg();
+
+    const p1 = pass.value || "";
+    const p2 = confirm.value || "";
+
+    if (p1.length < 6) return setMsg("error", "❌ Password must be at least 6 characters.");
+    if (p1 !== p2) return setMsg("error", "❌ Passwords do not match.");
+
+    // Ensure session still exists
+    try{
+      const ok = await refreshSession();
+      if (!ok){
+        await updateBanner();
+        return setMsg("error",
+          "❌ No recovery session.\n\nGo back to the reset email and click the link again."
+        );
+      }
+    } catch(e){
+      return setMsg("error", "❌ Session error: " + (e?.message || String(e)));
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Updating…";
+
+    try{
+      const { error } = await client.auth.updateUser({ password: p1 });
+      if (error){
+        setMsg("error", "❌ " + error.message + "\n\nTip: Request a new reset email and open that link.");
+      } else {
+        setMsg("ok", "✅ Password updated successfully!\nYou can close this page and log in.");
+      }
+    } catch(e){
+      setMsg("error", "❌ Unexpected error: " + (e?.message || String(e)));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Update password";
+    }
+  });
+</script>
+</body>
+</html>
 
   // ✅ Ensure Supabase CDN loaded (THIS prevents silent failures)
   if (!window.supabase || !window.supabase.createClient) {
