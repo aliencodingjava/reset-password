@@ -21,6 +21,7 @@
       --blue2:#60a5fa;
       --red:#ef4444;
       --green:#22c55e;
+      --yellow:#f59e0b;
       --shadow: 0 30px 90px rgba(0,0,0,.60);
       --radius: 20px;
     }
@@ -42,7 +43,7 @@
     }
 
     .card{
-      width: min(480px, 100%);
+      width: min(520px, 100%);
       background: var(--card);
       border: 1px solid var(--stroke);
       border-radius: var(--radius);
@@ -81,7 +82,6 @@
 
     .content{ padding: 0 22px 22px 22px; }
 
-    /* Small status pill */
     .status{
       margin: 10px 0 14px 0;
       padding: 10px 12px;
@@ -107,6 +107,17 @@
     .dot.warn{ background: rgba(245,158,11,.9); box-shadow: 0 0 0 4px rgba(245,158,11,.15); }
     .dot.err{ background: rgba(239,68,68,.9); box-shadow: 0 0 0 4px rgba(239,68,68,.15); }
 
+    .timer{
+      margin-left: auto;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.06);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--blue2);
+      display:none;
+    }
+
     .row{
       display:grid;
       gap: 10px;
@@ -117,13 +128,16 @@
       font-size: 12px;
       color: var(--muted);
       margin-bottom: -4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .field{ position:relative; }
 
     input{
       width: 100%;
-      padding: 12px 64px 12px 12px;
+      padding: 12px 104px 12px 12px;
       border-radius: 16px;
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,.05);
@@ -138,24 +152,93 @@
       box-shadow: 0 0 0 4px rgba(59,130,246,.15);
     }
 
-    .toggle{
+    .field-actions{
       position:absolute;
       right: 10px;
       top: 50%;
       transform: translateY(-50%);
       z-index: 5;
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn{
       border: 1px solid var(--stroke2);
       background: rgba(255,255,255,.06);
       color: var(--text);
-      border-radius: 12px;
-      padding: 7px 10px;
+      border-radius: 10px;
+      padding: 6px 9px;
       font-size: 12px;
       cursor:pointer;
       user-select:none;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      min-height: 30px;
+    }
+    .icon-btn:hover{
+      background: rgba(255,255,255,.12);
+      border-color: var(--blue2);
+    }
+
+    .caps-warning{
+      display: none;
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(245,158,11,.12);
+      border: 1px solid rgba(245,158,11,.25);
+      color: var(--yellow);
+      font-size: 12px;
+      align-items: center;
+      gap: 8px;
+    }
+    .caps-warning.show{ display: flex; }
+
+    .requirements{
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--stroke);
+    }
+    .req-title{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .req-item{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .req-item:last-child{ margin-bottom: 0; }
+    .req-item.met{ color: var(--green); }
+    .req-icon{
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .req-item.met .req-icon{
+      border-color: var(--green);
+      background: var(--green);
+      color: white;
     }
 
     .strength{
-      margin-top: 6px;
+      margin-top: 10px;
       display:flex;
       gap: 10px;
       align-items:center;
@@ -195,7 +278,9 @@
       letter-spacing: .2px;
       box-shadow: 0 18px 45px rgba(59,130,246,.25);
       transition: transform .08s ease, filter .2s ease;
+      font-size: 14px;
     }
+    button.primary:hover{ filter: brightness(1.1); }
     button.primary:active{ transform: translateY(1px) scale(.995); }
     button.primary:disabled{ opacity:.55; cursor:not-allowed; filter:saturate(.8); }
 
@@ -206,6 +291,11 @@
       padding: 10px 14px;
       border-radius: 16px;
       cursor:pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    button.secondary:hover{
+      background: rgba(255,255,255,.06);
     }
 
     .footer{
@@ -221,7 +311,6 @@
     a{ color: var(--blue2); text-decoration: none; }
     a:hover{ text-decoration: underline; }
 
-    /* Snackbar */
     .snackbar {
       position: fixed;
       left: 50%;
@@ -264,6 +353,49 @@
       font-size: 12px;
       cursor:pointer;
     }
+
+    .hint{
+      font-size: 11px;
+      color: rgba(156,163,175,.7);
+      margin-top: 6px;
+    }
+
+    .success-screen{
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .success-screen.show{ display: block; }
+    .success-icon{
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(34,197,94,.2), rgba(34,197,94,.05));
+      border: 2px solid rgba(34,197,94,.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      animation: successPop 0.5s ease;
+    }
+    @keyframes successPop {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .success-title{
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .success-text{
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 
@@ -281,19 +413,40 @@
       <div class="status" id="status">
         <div class="dot" id="statusDot"></div>
         <div id="statusText">Loading…</div>
+        <div class="timer" id="timer">15:00</div>
       </div>
 
-      <div class="row">
-        <label for="password">New password</label>
+      <!-- ✅ IMPORTANT: give row an ID so JS can hide it -->
+      <div class="row" id="row">
+        <label for="password">
+          New password
+          <span class="hint">(Press Ctrl+G to generate)</span>
+        </label>
         <div class="field">
           <input id="password" type="password" placeholder="At least 6 characters" autocomplete="new-password" />
-          <button class="toggle" id="toggle1" type="button">Show</button>
+          <div class="field-actions">
+            <button class="icon-btn" id="generate" type="button" title="Generate password (Ctrl+G)">🎲</button>
+            <button class="icon-btn" id="toggle1" type="button" title="Show password">👁️</button>
+          </div>
         </div>
+
+        <div class="caps-warning" id="capsWarning">⚠️ Caps Lock is ON</div>
 
         <label for="confirm">Confirm new password</label>
         <div class="field">
           <input id="confirm" type="password" placeholder="Repeat password" autocomplete="new-password" />
-          <button class="toggle" id="toggle2" type="button">Show</button>
+          <div class="field-actions">
+            <button class="icon-btn" id="copy" type="button" title="Copy password">📋</button>
+            <button class="icon-btn" id="toggle2" type="button" title="Show password">👁️</button>
+          </div>
+        </div>
+
+        <div class="requirements">
+          <div class="req-title">Password Requirements</div>
+          <div class="req-item" id="req-length"><div class="req-icon">✓</div>At least 6 characters</div>
+          <div class="req-item" id="req-upper"><div class="req-icon">✓</div>One uppercase letter</div>
+          <div class="req-item" id="req-lower"><div class="req-icon">✓</div>One lowercase letter</div>
+          <div class="req-item" id="req-number"><div class="req-icon">✓</div>One number</div>
         </div>
 
         <div class="strength">
@@ -302,8 +455,22 @@
         </div>
 
         <div class="actions">
-          <button class="primary" id="btn" type="button">Update password</button>
-          <button class="secondary" type="button" onclick="window.close()">Close</button>
+          <button class="primary" id="btn" type="button">Update password <span style="opacity:0.6;">(Enter)</span></button>
+          <button class="secondary" id="clearBtn" type="button">Clear (Esc)</button>
+        </div>
+      </div>
+
+      <!-- Success Screen -->
+      <div class="success-screen" id="successScreen">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Password Updated!</div>
+        <div class="success-text">
+          Your password has been successfully changed.<br>
+          You can now log in to your account with your new password.
+        </div>
+        <div class="actions">
+          <button class="primary" id="backToApp" type="button">Back to App 🚀</button>
+          <button class="secondary" type="button" onclick="window.close()">Close Tab</button>
         </div>
       </div>
     </div>
@@ -314,7 +481,6 @@
     </div>
   </div>
 
-  <!-- Snackbar -->
   <div class="snackbar" id="snackbar" role="status" aria-live="polite">
     <div class="sb-dot info" id="sbDot"></div>
     <div class="sb-text" id="sbText">Hello</div>
@@ -322,21 +488,28 @@
   </div>
 
 <script>
-  // ✅ Your Supabase Project URL
   const SUPABASE_URL = "https://gdvhiudodnqdqhkyghsk.supabase.co";
-  // ✅ anon/publishable key (safe in public)
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkdmhpdWRvZG5xZHFoa3lnaHNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMTI2MTksImV4cCI6MjA2NDU4ODYxOX0.p9P-Hv4r-C9eZU3Dz-kX9U2iv8PUAKaUU5qZGPMJ844";
+
+  // ✅ Deep link to open your Android app (matches manifest: scheme=flights host=reset-done)
+  const APP_DEEPLINK = "intent://reset-done#Intent;scheme=flights;package=com.flights.studio;end";
 
   const $ = (id) => document.getElementById(id);
 
   const statusText = $("statusText");
   const statusDot = $("statusDot");
+  const timer = $("timer");
   const btn = $("btn");
+  const clearBtn = $("clearBtn");
   const pass = $("password");
   const confirm = $("confirm");
   const fill = $("fill");
   const strengthText = $("strengthText");
+  const capsWarning = $("capsWarning");
+  const successScreen = $("successScreen");
+  const backToAppBtn = $("backToApp");
+  const row = $("row");
 
   // Snackbar
   const snackbar = $("snackbar");
@@ -352,11 +525,9 @@
     if (sbTimer) clearTimeout(sbTimer);
     sbTimer = setTimeout(() => hideSnack(), timeoutMs);
   }
-
   function hideSnack(){
     snackbar.className = "snackbar";
   }
-
   sbClose.addEventListener("click", hideSnack);
 
   function setStatus(kind, text){
@@ -364,10 +535,28 @@
     statusDot.className = "dot " + kind;
   }
 
-  // Ensure Supabase loaded
+  // Back to app
+  backToAppBtn.addEventListener("click", () => {
+    window.location.href = APP_DEEPLINK;
+  });
+
+  // If opened with #error=... in URL, show it nicely
+  function showUrlErrorsIfAny() {
+    const hash = window.location.hash || "";
+    if (!hash.startsWith("#")) return;
+    const params = new URLSearchParams(hash.substring(1));
+    const err = params.get("error") || "";
+    const desc = params.get("error_description") || "";
+    if (err) {
+      setStatus("err", "Link error. Request a new reset link.");
+      showSnack("err", (desc ? decodeURIComponent(desc) : err), 6000);
+      btn.disabled = true;
+    }
+  }
+
   if (!window.supabase || !window.supabase.createClient) {
     setStatus("err", "Supabase JS failed to load.");
-    showSnack("err", "Supabase library not loaded. Check your internet and reload.", 4500);
+    showSnack("err", "Supabase library not loaded. Check internet and reload.", 4500);
     btn.disabled = true;
     throw new Error("Supabase global not found");
   }
@@ -376,17 +565,90 @@
     auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
   });
 
-  // Show/Hide
+  // Password generator
+  function generatePassword() {
+    const length = 16;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const numbers = "0123456789";
+    const special = "!@#$%^&*";
+
+    let pwd = "";
+    pwd += upper[Math.floor(Math.random() * upper.length)];
+    pwd += lower[Math.floor(Math.random() * lower.length)];
+    pwd += numbers[Math.floor(Math.random() * numbers.length)];
+    pwd += special[Math.floor(Math.random() * special.length)];
+
+    for (let i = pwd.length; i < length; i++) {
+      pwd += charset[Math.floor(Math.random() * charset.length)];
+    }
+
+    return pwd.split('').sort(() => Math.random() - 0.5).join('');
+  }
+
+  $("generate").addEventListener("click", () => {
+    const newPwd = generatePassword();
+    pass.value = newPwd;
+    confirm.value = newPwd;
+    updateStrength();
+    checkRequirements();
+    showSnack("ok", "Strong password generated! ✨", 2000);
+  });
+
+  // Copy password
+  $("copy").addEventListener("click", async () => {
+    if (pass.value) {
+      try {
+        await navigator.clipboard.writeText(pass.value);
+        showSnack("ok", "Password copied to clipboard! 📋", 2000);
+      } catch {
+        showSnack("err", "Failed to copy password", 2000);
+      }
+    } else {
+      showSnack("info", "No password to copy", 2000);
+    }
+  });
+
+  // Toggle visibility
   function bindToggle(toggleId, inputEl){
     const t = $(toggleId);
     t.addEventListener("click", () => {
       const isPw = inputEl.type === "password";
       inputEl.type = isPw ? "text" : "password";
-      t.textContent = isPw ? "Hide" : "Show";
+      t.textContent = isPw ? "🙈" : "👁️";
+      t.title = isPw ? "Hide password" : "Show password";
     });
   }
   bindToggle("toggle1", pass);
   bindToggle("toggle2", confirm);
+
+  // Caps lock detection
+  function checkCapsLock(e) {
+    const isCapsLock = e.getModifierState && e.getModifierState('CapsLock');
+    capsWarning.className = isCapsLock ? "caps-warning show" : "caps-warning";
+  }
+  pass.addEventListener("keydown", checkCapsLock);
+  pass.addEventListener("keyup", checkCapsLock);
+  confirm.addEventListener("keydown", checkCapsLock);
+  confirm.addEventListener("keyup", checkCapsLock);
+
+  // Requirements checker
+  function checkRequirements() {
+    const p = pass.value || "";
+    const reqs = [
+      { id: "req-length", test: p.length >= 6 },
+      { id: "req-upper",  test: /[A-Z]/.test(p) },
+      { id: "req-lower",  test: /[a-z]/.test(p) },
+      { id: "req-number", test: /[0-9]/.test(p) }
+    ];
+    reqs.forEach(r => {
+      const el = $(r.id);
+      if (!el) return;
+      if (r.test) el.classList.add("met");
+      else el.classList.remove("met");
+    });
+  }
 
   // Strength meter
   function strengthScore(p){
@@ -399,54 +661,94 @@
     if (/[^A-Za-z0-9]/.test(p)) s++;
     return Math.min(5, s);
   }
+
   function updateStrength(){
     const p = pass.value || "";
     const s = strengthScore(p);
     fill.style.width = ((s / 5) * 100) + "%";
     const label = ["—", "Weak", "OK", "Good", "Strong", "Very strong"][s];
     strengthText.textContent = "Strength: " + label;
+    checkRequirements();
   }
+
   pass.addEventListener("input", updateStrength);
   updateStrength();
 
-  // Wait for session a bit (fixes "must refresh")
-  async function waitForSession(maxTries = 8, delayMs = 350){
+  // Session timer (15 minutes)
+  let sessionStartTime = null;
+  let timerInterval = null;
+
+  function startTimer() {
+    sessionStartTime = Date.now();
+    timer.style.display = "block";
+
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+      const remaining = Math.max(0, 900 - elapsed);
+
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+      if (remaining === 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        setStatus("err", "Session expired. Request a new reset link.");
+        btn.disabled = true;
+        showSnack("err", "Session expired. Request a new reset link.", 6000);
+      } else if (remaining <= 60) {
+        timer.style.color = "var(--red)";
+      } else if (remaining <= 300) {
+        timer.style.color = "var(--yellow)";
+      } else {
+        timer.style.color = "var(--blue2)";
+      }
+    }, 1000);
+  }
+
+  async function waitForSession(maxTries = 10, delayMs = 300){
     for (let i = 0; i < maxTries; i++){
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
-      if (data?.session) return true;
+      if (data?.session) return data.session;
       await new Promise(r => setTimeout(r, delayMs));
     }
-    return false;
+    return null;
   }
 
   async function updateBanner(){
     try{
-      const ok = await waitForSession();
-      if (ok){
+      showUrlErrorsIfAny(); // handle #error=... links
+      const session = await waitForSession();
+
+      if (session){
         setStatus("ok", "Recovery session detected. You can update your password.");
         btn.disabled = false;
+
+        // Start timer only once we have a session
+        if (!timerInterval) startTimer();
       } else {
         setStatus("warn", "No recovery session. Open this page from the reset email link.");
         btn.disabled = true;
+        timer.style.display = "none";
       }
     } catch(e){
       setStatus("err", "Failed to check session.");
-      showSnack("err", "Session check error: " + (e?.message || String(e)), 4500);
+      showSnack("err", "Session check error: " + (e?.message || String(e)), 5000);
       btn.disabled = true;
     }
   }
 
-  // initial
   updateBanner();
 
   // Refresh link = re-check session (NOT reload)
   $("refreshLink").addEventListener("click", async (e) => {
     e.preventDefault();
-    showSnack("info", "Refreshing session…", 1500);
+    showSnack("info", "Refreshing session…", 1200);
     await updateBanner();
-    if (!btn.disabled) showSnack("ok", "Session ready ✅", 2200);
-    else showSnack("err", "Still no recovery session. Open the email reset link.", 4200);
+    if (!btn.disabled) showSnack("ok", "Session ready ✅", 2000);
+    else showSnack("err", "Still no recovery session. Open the email reset link.", 5000);
   });
 
   async function doUpdate(){
@@ -456,12 +758,12 @@
     if (p1.length < 6) return showSnack("err", "Password must be at least 6 characters.", 3200);
     if (p1 !== p2) return showSnack("err", "Passwords do not match.", 3200);
 
-    // ensure session exists
-    const has = await waitForSession(3, 250);
-    if (!has){
+    // Ensure session exists (sometimes needs a tick)
+    const session = await waitForSession(4, 250);
+    if (!session){
       setStatus("warn", "No recovery session. Open the reset email link.");
       btn.disabled = true;
-      return showSnack("err", "No recovery session. Click the reset email link again.", 4500);
+      return showSnack("err", "No recovery session. Click the reset email link again.", 5500);
     }
 
     btn.disabled = true;
@@ -469,21 +771,81 @@
 
     try{
       const { error } = await client.auth.updateUser({ password: p1 });
+
       if (error){
-        showSnack("err", error.message, 5000);
-      } else {
-        showSnack("ok", "Password updated ✅ You can close this page and log in.", 5500);
-        setStatus("ok", "Password updated successfully.");
+        showSnack("err", error.message, 6000);
+        setStatus("err", "Password update failed.");
+        btn.disabled = false;
+        btn.textContent = "Update password";
+        return;
       }
+
+      // Success
+      showSnack("ok", "✅ Password updated successfully!", 2500);
+      setStatus("ok", "Password updated successfully.");
+
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      timer.style.display = "none";
+
+      // Swap to success screen
+      setTimeout(() => {
+        if (row) row.style.display = "none";
+        successScreen.className = "success-screen show";
+
+        // Keep update button locked (hidden anyway)
+        btn.disabled = true;
+        btn.textContent = "Updated";
+      }, 700);
+
+      // Optional: auto-open app after a moment
+      setTimeout(() => {
+        // Try to go back to app automatically, user can also tap the button
+        window.location.href = APP_DEEPLINK;
+      }, 2200);
+
     } catch(e){
-      showSnack("err", "Unexpected error: " + (e?.message || String(e)), 5000);
-    } finally {
+      showSnack("err", "Unexpected error: " + (e?.message || String(e)), 6000);
+      setStatus("err", "Unexpected error.");
       btn.disabled = false;
       btn.textContent = "Update password";
     }
   }
 
   btn.addEventListener("click", doUpdate);
+
+  // Clear button
+  clearBtn.addEventListener("click", () => {
+    pass.value = "";
+    confirm.value = "";
+    updateStrength();
+    showSnack("info", "Fields cleared", 1500);
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener("keydown", (e) => {
+    // Enter to submit (only if focused in inputs)
+    if (e.key === "Enter" && (document.activeElement === pass || document.activeElement === confirm)) {
+      e.preventDefault();
+      if (!btn.disabled) doUpdate();
+    }
+
+    // Escape to clear
+    if (e.key === "Escape") {
+      pass.value = "";
+      confirm.value = "";
+      updateStrength();
+      pass.blur();
+      confirm.blur();
+      showSnack("info", "Cleared", 1200);
+    }
+
+    // Ctrl/Cmd+G to generate
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "g") {
+      e.preventDefault();
+      $("generate").click();
+    }
+  });
 </script>
 </body>
 </html>
