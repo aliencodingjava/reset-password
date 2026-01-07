@@ -10,38 +10,39 @@
 
   <style>
     :root{
-      --bg0:#070A12;
+      --bg0:#060813;
       --bg1:#0B1220;
-      --card:#0E1629cc;
-      --stroke:#ffffff1f;
+      --card: rgba(14,22,41,.72);
+      --stroke: rgba(255,255,255,.12);
+      --stroke2: rgba(255,255,255,.18);
       --text:#e5e7eb;
       --muted:#9ca3af;
       --blue:#3b82f6;
       --blue2:#60a5fa;
       --red:#ef4444;
       --green:#22c55e;
-      --shadow: 0 30px 80px rgba(0,0,0,.55);
-      --radius: 18px;
+      --shadow: 0 30px 90px rgba(0,0,0,.60);
+      --radius: 20px;
     }
 
     * { box-sizing: border-box; }
+    html, body { height:100%; }
     body{
       margin:0;
-      min-height:100vh;
       display:grid;
       place-items:center;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--text);
       background:
-        radial-gradient(1200px 700px at 20% 20%, rgba(59,130,246,.25), transparent 60%),
-        radial-gradient(900px 600px at 80% 30%, rgba(34,197,94,.14), transparent 55%),
-        radial-gradient(800px 700px at 50% 90%, rgba(99,102,241,.15), transparent 60%),
+        radial-gradient(1200px 700px at 20% 20%, rgba(59,130,246,.22), transparent 60%),
+        radial-gradient(900px 600px at 80% 30%, rgba(34,197,94,.12), transparent 55%),
+        radial-gradient(800px 700px at 50% 90%, rgba(99,102,241,.12), transparent 60%),
         linear-gradient(180deg, var(--bg0), var(--bg1));
       padding: 24px;
     }
 
     .card{
-      width: min(460px, 100%);
+      width: min(480px, 100%);
       background: var(--card);
       border: 1px solid var(--stroke);
       border-radius: var(--radius);
@@ -61,10 +62,10 @@
       width: 44px; height: 44px;
       border-radius: 14px;
       background:
-        radial-gradient(circle at 30% 30%, rgba(96,165,250,.9), rgba(59,130,246,.3) 55%, rgba(0,0,0,0) 65%),
-        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+        radial-gradient(circle at 30% 30%, rgba(96,165,250,.9), rgba(59,130,246,.28) 55%, rgba(0,0,0,0) 66%),
+        linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.18);
-      box-shadow: 0 10px 30px rgba(59,130,246,.15);
+      box-shadow: 0 14px 40px rgba(59,130,246,.18);
     }
     h1{
       margin:0;
@@ -78,21 +79,33 @@
       line-height: 1.35;
     }
 
-    .content{
-      padding: 0 22px 22px 22px;
-    }
+    .content{ padding: 0 22px 22px 22px; }
 
-    .notice{
+    /* Small status pill */
+    .status{
       margin: 10px 0 14px 0;
       padding: 10px 12px;
-      border-radius: 12px;
+      border-radius: 14px;
       border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
       color: var(--muted);
       font-size: 13px;
       line-height: 1.35;
-      background: rgba(255,255,255,.04);
-      white-space: pre-wrap;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      user-select:none;
     }
+    .dot{
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.22);
+      box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+      flex: 0 0 auto;
+    }
+    .dot.ok{ background: rgba(34,197,94,.9); box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
+    .dot.warn{ background: rgba(245,158,11,.9); box-shadow: 0 0 0 4px rgba(245,158,11,.15); }
+    .dot.err{ background: rgba(239,68,68,.9); box-shadow: 0 0 0 4px rgba(239,68,68,.15); }
 
     .row{
       display:grid;
@@ -106,14 +119,12 @@
       margin-bottom: -4px;
     }
 
-    .field{
-      position:relative;
-    }
+    .field{ position:relative; }
 
     input{
       width: 100%;
-      padding: 12px 58px 12px 12px;
-      border-radius: 14px;
+      padding: 12px 64px 12px 12px;
+      border-radius: 16px;
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,.05);
       color: var(--text);
@@ -127,20 +138,17 @@
       box-shadow: 0 0 0 4px rgba(59,130,246,.15);
     }
 
-    /* ✅ real button, always clickable on mobile */
     .toggle{
       position:absolute;
       right: 10px;
       top: 50%;
       transform: translateY(-50%);
       z-index: 5;
-      pointer-events: auto;
-
-      border: 1px solid var(--stroke);
+      border: 1px solid var(--stroke2);
       background: rgba(255,255,255,.06);
       color: var(--text);
-      border-radius: 10px;
-      padding: 6px 10px;
+      border-radius: 12px;
+      padding: 7px 10px;
       font-size: 12px;
       cursor:pointer;
       user-select:none;
@@ -149,7 +157,7 @@
     .strength{
       margin-top: 6px;
       display:flex;
-      gap: 8px;
+      gap: 10px;
       align-items:center;
       color: var(--muted);
       font-size: 12px;
@@ -166,7 +174,7 @@
       height:100%;
       width:0%;
       background: linear-gradient(90deg, rgba(239,68,68,.9), rgba(59,130,246,.9), rgba(34,197,94,.9));
-      transition: width .2s ease;
+      transition: width .18s ease;
     }
 
     .actions{
@@ -179,58 +187,25 @@
       width:100%;
       padding: 12px 14px;
       border: 0;
-      border-radius: 14px;
+      border-radius: 16px;
       cursor:pointer;
       background: linear-gradient(180deg, rgba(96,165,250,.95), rgba(59,130,246,.95));
       color: #071022;
-      font-weight: 750;
+      font-weight: 800;
       letter-spacing: .2px;
-      box-shadow: 0 18px 40px rgba(59,130,246,.25);
+      box-shadow: 0 18px 45px rgba(59,130,246,.25);
       transition: transform .08s ease, filter .2s ease;
     }
     button.primary:active{ transform: translateY(1px) scale(.995); }
-    button.primary:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-      filter:saturate(.8);
-    }
+    button.primary:disabled{ opacity:.55; cursor:not-allowed; filter:saturate(.8); }
 
-    .secondary{
+    button.secondary{
       background: transparent;
       border: 1px solid var(--stroke);
       color: var(--text);
       padding: 10px 14px;
-      border-radius: 14px;
+      border-radius: 16px;
       cursor:pointer;
-    }
-
-    .msg{
-      margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.04);
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-      display:none;
-      white-space: pre-wrap;
-    }
-    .msg.error{
-      display:block;
-      border-color: rgba(239,68,68,.35);
-      background: rgba(239,68,68,.08);
-      color: #fecaca;
-    }
-    .msg.ok{
-      display:block;
-      border-color: rgba(34,197,94,.35);
-      background: rgba(34,197,94,.08);
-      color: #bbf7d0;
-    }
-    .msg.info{
-      display:block;
-      color: var(--muted);
     }
 
     .footer{
@@ -245,6 +220,50 @@
     }
     a{ color: var(--blue2); text-decoration: none; }
     a:hover{ text-decoration: underline; }
+
+    /* Snackbar */
+    .snackbar {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      width: min(560px, calc(100% - 24px));
+      background: rgba(10,16,30,.85);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 12px 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 9999;
+    }
+    .snackbar.show { display:flex; animation: pop .18s ease; }
+    @keyframes pop { from { transform: translateX(-50%) translateY(8px); opacity:.0 } to { transform: translateX(-50%) translateY(0); opacity:1 } }
+
+    .sb-dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 4px rgba(255,255,255,.08);
+      flex: 0 0 auto;
+    }
+    .sb-dot.ok{ background: rgba(34,197,94,.95); box-shadow: 0 0 0 4px rgba(34,197,94,.16); }
+    .sb-dot.err{ background: rgba(239,68,68,.95); box-shadow: 0 0 0 4px rgba(239,68,68,.16); }
+    .sb-dot.info{ background: rgba(96,165,250,.95); box-shadow: 0 0 0 4px rgba(96,165,250,.16); }
+
+    .sb-text{ flex:1; font-size: 13px; color: rgba(229,231,235,.95); white-space: pre-wrap; }
+    .sb-btn{
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 12px;
+      cursor:pointer;
+    }
   </style>
 </head>
 
@@ -259,7 +278,10 @@
     </div>
 
     <div class="content">
-      <div class="notice" id="notice">Loading…</div>
+      <div class="status" id="status">
+        <div class="dot" id="statusDot"></div>
+        <div id="statusText">Loading…</div>
+      </div>
 
       <div class="row">
         <label for="password">New password</label>
@@ -283,15 +305,20 @@
           <button class="primary" id="btn" type="button">Update password</button>
           <button class="secondary" type="button" onclick="window.close()">Close</button>
         </div>
-
-        <div class="msg info" id="msg"></div>
       </div>
     </div>
 
     <div class="footer">
       <span>Supabase password recovery</span>
-      <span><a href="#" onclick="location.reload(); return false;">Refresh</a></span>
+      <span><a href="#" id="refreshLink">Refresh</a></span>
     </div>
+  </div>
+
+  <!-- Snackbar -->
+  <div class="snackbar" id="snackbar" role="status" aria-live="polite">
+    <div class="sb-dot info" id="sbDot"></div>
+    <div class="sb-text" id="sbText">Hello</div>
+    <button class="sb-btn" id="sbClose" type="button">OK</button>
   </div>
 
 <script>
@@ -303,34 +330,48 @@
 
   const $ = (id) => document.getElementById(id);
 
-  const notice = $("notice");
-  const msg = $("msg");
+  const statusText = $("statusText");
+  const statusDot = $("statusDot");
   const btn = $("btn");
   const pass = $("password");
   const confirm = $("confirm");
   const fill = $("fill");
   const strengthText = $("strengthText");
 
-  function setMsg(type, text){
-    msg.className = "msg " + type;
-    msg.style.display = "block";
-    msg.textContent = text;
-  }
-  function clearMsg(){
-    msg.style.display = "none";
-    msg.textContent = "";
-    msg.className = "msg info";
+  // Snackbar
+  const snackbar = $("snackbar");
+  const sbDot = $("sbDot");
+  const sbText = $("sbText");
+  const sbClose = $("sbClose");
+  let sbTimer = null;
+
+  function showSnack(kind, text, timeoutMs = 3000) {
+    sbText.textContent = text;
+    sbDot.className = "sb-dot " + kind;
+    snackbar.className = "snackbar show";
+    if (sbTimer) clearTimeout(sbTimer);
+    sbTimer = setTimeout(() => hideSnack(), timeoutMs);
   }
 
-  // ✅ Ensure Supabase loaded
+  function hideSnack(){
+    snackbar.className = "snackbar";
+  }
+
+  sbClose.addEventListener("click", hideSnack);
+
+  function setStatus(kind, text){
+    statusText.textContent = text;
+    statusDot.className = "dot " + kind;
+  }
+
+  // Ensure Supabase loaded
   if (!window.supabase || !window.supabase.createClient) {
-    notice.textContent = "❌ Supabase JS failed to load.";
-    setMsg("error", "Supabase library not loaded. Check your internet and reload.");
+    setStatus("err", "Supabase JS failed to load.");
+    showSnack("err", "Supabase library not loaded. Check your internet and reload.", 4500);
     btn.disabled = true;
     throw new Error("Supabase global not found");
   }
 
-  // ✅ Correct CDN global: window.supabase
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
   });
@@ -368,204 +409,81 @@
   pass.addEventListener("input", updateStrength);
   updateStrength();
 
-  // Session detection
-  let hasSession = false;
-  async function refreshSession(){
-    const { data, error } = await client.auth.getSession();
-    if (error) throw error;
-    hasSession = !!data?.session;
-    return hasSession;
+  // Wait for session a bit (fixes "must refresh")
+  async function waitForSession(maxTries = 8, delayMs = 350){
+    for (let i = 0; i < maxTries; i++){
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      if (data?.session) return true;
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+    return false;
   }
 
   async function updateBanner(){
     try{
-      const ok = await refreshSession();
+      const ok = await waitForSession();
       if (ok){
-        notice.textContent = "✅ Recovery session detected. You can update your password.";
+        setStatus("ok", "Recovery session detected. You can update your password.");
         btn.disabled = false;
       } else {
-        notice.textContent =
-          "⚠️ No recovery session.\nYou MUST open this page from the reset email link (not directly).";
+        setStatus("warn", "No recovery session. Open this page from the reset email link.");
         btn.disabled = true;
       }
     } catch(e){
-      notice.textContent = "❌ Failed to check session.";
-      setMsg("error", "Session check error: " + (e?.message || String(e)));
+      setStatus("err", "Failed to check session.");
+      showSnack("err", "Session check error: " + (e?.message || String(e)), 4500);
       btn.disabled = true;
     }
   }
 
-  // Run on load
+  // initial
   updateBanner();
 
-  // Update password
-  btn.addEventListener("click", async () => {
-    clearMsg();
+  // Refresh link = re-check session (NOT reload)
+  $("refreshLink").addEventListener("click", async (e) => {
+    e.preventDefault();
+    showSnack("info", "Refreshing session…", 1500);
+    await updateBanner();
+    if (!btn.disabled) showSnack("ok", "Session ready ✅", 2200);
+    else showSnack("err", "Still no recovery session. Open the email reset link.", 4200);
+  });
 
+  async function doUpdate(){
     const p1 = pass.value || "";
     const p2 = confirm.value || "";
 
-    if (p1.length < 6) return setMsg("error", "❌ Password must be at least 6 characters.");
-    if (p1 !== p2) return setMsg("error", "❌ Passwords do not match.");
+    if (p1.length < 6) return showSnack("err", "Password must be at least 6 characters.", 3200);
+    if (p1 !== p2) return showSnack("err", "Passwords do not match.", 3200);
 
-    // Ensure session still exists
-    try{
-      const ok = await refreshSession();
-      if (!ok){
-        await updateBanner();
-        return setMsg("error",
-          "❌ No recovery session.\n\nGo back to the reset email and click the link again."
-        );
-      }
-    } catch(e){
-      return setMsg("error", "❌ Session error: " + (e?.message || String(e)));
-    }
-
-    btn.disabled = true;
-    btn.textContent = "Updating…";
-
-    try{
-      const { error } = await client.auth.updateUser({ password: p1 });
-      if (error){
-        setMsg("error", "❌ " + error.message + "\n\nTip: Request a new reset email and open that link.");
-      } else {
-        setMsg("ok", "✅ Password updated successfully!\nYou can close this page and log in.");
-      }
-    } catch(e){
-      setMsg("error", "❌ Unexpected error: " + (e?.message || String(e)));
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Update password";
-    }
-  });
-</script>
-</body>
-</html>
-
-  // ✅ Ensure Supabase CDN loaded (THIS prevents silent failures)
-  if (!window.supabase || !window.supabase.createClient) {
-    setMsg("error", "❌ Supabase JS failed to load.\nCheck your internet or the script tag URL.");
-    notice.textContent = "❌ Supabase library not loaded.";
-    btn.disabled = true;
-    throw new Error("Supabase global not found");
-  }
-
-  // ✅ Correct global for CDN: window.supabase
-  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      detectSessionInUrl: true,
-      persistSession: true,
-      autoRefreshToken: true,
-    }
-  });
-
-  function togglePassword(input, toggleEl){
-    const isPw = input.type === "password";
-    input.type = isPw ? "text" : "password";
-    toggleEl.textContent = isPw ? "Hide" : "Show";
-  }
-
-  // Show/hide works on click and keyboard
-  function bindToggle(toggleId, inputEl){
-    const t = $(toggleId);
-    t.addEventListener("click", () => togglePassword(inputEl, t));
-    t.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        togglePassword(inputEl, t);
-      }
-    });
-  }
-  bindToggle("toggle1", pass);
-  bindToggle("toggle2", confirm);
-
-  function strengthScore(p){
-    let s = 0;
-    if (!p) return 0;
-    if (p.length >= 6) s++;
-    if (p.length >= 10) s++;
-    if (/[A-Z]/.test(p)) s++;
-    if (/[0-9]/.test(p)) s++;
-    if (/[^A-Za-z0-9]/.test(p)) s++;
-    return Math.min(5, s);
-  }
-
-  function updateStrength(){
-    const p = pass.value || "";
-    const s = strengthScore(p);
-    fill.style.width = ((s / 5) * 100) + "%";
-    const label = ["—", "Weak", "OK", "Good", "Strong", "Very strong"][s];
-    strengthText.textContent = "Strength: " + label;
-  }
-  pass.addEventListener("input", updateStrength);
-  updateStrength();
-
-  let hasSession = false;
-
-  async function refreshSessionBanner(){
-    try {
-      const { data } = await client.auth.getSession();
-      hasSession = !!data?.session;
-
-      if (hasSession) {
-        notice.textContent = "✅ Recovery session detected. You can set a new password.";
-        btn.disabled = false;
-      } else {
-        notice.textContent =
-          "⚠️ No recovery session. You MUST open this page from the reset email link (not directly).";
-        btn.disabled = true;
-      }
-    } catch (e) {
-      notice.textContent = "❌ Failed to check session.";
-      setMsg("error", "Session check error: " + (e?.message || String(e)));
+    // ensure session exists
+    const has = await waitForSession(3, 250);
+    if (!has){
+      setStatus("warn", "No recovery session. Open the reset email link.");
       btn.disabled = true;
-    }
-  }
-
-  // Run on load
-  refreshSessionBanner();
-
-  // IMPORTANT: make the function visible to inline onclick
-  window.resetPassword = async function resetPassword(){
-    clearMsg();
-
-    const p1 = pass.value || "";
-    const p2 = confirm.value || "";
-
-    if (p1.length < 6) return setMsg("error", "❌ Password must be at least 6 characters.");
-    if (p1 !== p2) return setMsg("error", "❌ Passwords do not match.");
-
-    // If user somehow bypassed the disabled button, block anyway
-    await refreshSessionBanner();
-    if (!hasSession) {
-      return setMsg("error",
-        "❌ No recovery session.\n\nGo back to the reset email, click the link again, then try."
-      );
+      return showSnack("err", "No recovery session. Click the reset email link again.", 4500);
     }
 
     btn.disabled = true;
     btn.textContent = "Updating…";
 
-    try {
+    try{
       const { error } = await client.auth.updateUser({ password: p1 });
-
       if (error){
-        setMsg("error",
-          "❌ " + error.message +
-          "\n\nTip: Request a new reset email and open that link again."
-        );
+        showSnack("err", error.message, 5000);
       } else {
-        setMsg("ok",
-          "✅ Password updated successfully!\nYou can close this page and log in with your new password."
-        );
+        showSnack("ok", "Password updated ✅ You can close this page and log in.", 5500);
+        setStatus("ok", "Password updated successfully.");
       }
-    } catch (e) {
-      setMsg("error", "❌ Unexpected error: " + (e?.message || String(e)));
+    } catch(e){
+      showSnack("err", "Unexpected error: " + (e?.message || String(e)), 5000);
     } finally {
       btn.disabled = false;
       btn.textContent = "Update password";
     }
-  };
+  }
+
+  btn.addEventListener("click", doUpdate);
 </script>
 </body>
 </html>
