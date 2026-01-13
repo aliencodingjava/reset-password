@@ -587,46 +587,50 @@
     }
   }
 
-  async function updateBanner(){
-    try{
-      showUrlErrorsIfAny();
+async function updateBanner(){
+  try{
+    showUrlErrorsIfAny();
 
-      // 1) Try PKCE code first (new links)
-      let session = await tryExchangeCodeForSession();
+    // 1) Try PKCE code first (new links)
+    let session = await tryExchangeCodeForSession();
 
-      // 2) If no PKCE session, try normal session
-      if (!session) session = await getSession();
+    // 2) If no PKCE session, try normal session
+    if (!session) session = await getSession();
 
-      // 3) If still none, try implicit hash fallback (old links)
-      if (!session) session = await trySetSessionFromHash();
+    // 3) If still none, try implicit hash fallback (old links)
+    if (!session) session = await trySetSessionFromHash();
 
-      const allowed = isRecoveryAllowed();
+    // ✅ KEY FIX: if session exists, always allow this tab
+    if (session) setRecoveryAllowed();
 
-      if (!allowed) {
-        setStatus("warn", "Open this page from the reset email link.");
-        btn.disabled = true;
-        stopTimer();
-        return;
-      }
+    const allowed = isRecoveryAllowed();
 
-      if (session) {
-        setStatus("ok", "Recovery session verified. You can update your password.");
-        btn.disabled = false;
-        focusPasswordField();
-        startTimerFromSession(session);
-      } else {
-        setStatus("err", "Reset session missing/expired. Request a new reset link.");
-        btn.disabled = true;
-        stopTimer();
-        showSnack("err", "Session missing or expired. Request a new reset link.", 6500);
-      }
-    } catch(e){
-      setStatus("err", "Failed to check session.");
+    if (!allowed) {
+      setStatus("warn", "Open this page from the reset email link.");
       btn.disabled = true;
       stopTimer();
-      showSnack("err", "Session check error: " + (e?.message || String(e)), 5500);
+      return;
     }
+
+    if (session) {
+      setStatus("ok", "Recovery session verified. You can update your password.");
+      btn.disabled = false;
+      focusPasswordField();
+      startTimerFromSession(session);
+    } else {
+      setStatus("err", "Reset session missing/expired. Request a new reset link.");
+      btn.disabled = true;
+      stopTimer();
+      showSnack("err", "Session missing or expired. Request a new reset link.", 6500);
+    }
+  } catch(e){
+    setStatus("err", "Failed to check session.");
+    btn.disabled = true;
+    stopTimer();
+    showSnack("err", "Session check error: " + (e?.message || String(e)), 5500);
   }
+}
+
 
   updateBanner();
   window.addEventListener("hashchange", () => setTimeout(updateBanner, 80));
