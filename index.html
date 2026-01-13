@@ -5,33 +5,25 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Reset Password</title>
 
-  <!-- Supabase JS v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
+    /* --- your original CSS unchanged --- */
     :root{
-      --bg0:#060813;
-      --bg1:#0B1220;
+      --bg0:#060813; --bg1:#0B1220;
       --card: rgba(14,22,41,.72);
       --stroke: rgba(255,255,255,.12);
       --stroke2: rgba(255,255,255,.18);
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --blue:#3b82f6;
-      --blue2:#60a5fa;
-      --red:#ef4444;
-      --green:#22c55e;
-      --yellow:#f59e0b;
+      --text:#e5e7eb; --muted:#9ca3af;
+      --blue:#3b82f6; --blue2:#60a5fa;
+      --red:#ef4444; --green:#22c55e; --yellow:#f59e0b;
       --shadow: 0 30px 90px rgba(0,0,0,.60);
       --radius: 20px;
     }
-
     * { box-sizing: border-box; }
     html, body { height:100%; }
     body{
-      margin:0;
-      display:grid;
-      place-items:center;
+      margin:0; display:grid; place-items:center;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--text);
       background:
@@ -41,7 +33,6 @@
         linear-gradient(180deg, var(--bg0), var(--bg1));
       padding: 24px;
     }
-
     .card{
       width: min(520px, 100%);
       background: var(--card);
@@ -52,302 +43,128 @@
       -webkit-backdrop-filter: blur(18px);
       overflow:hidden;
     }
-
-    .header{
-      padding: 22px 22px 10px 22px;
-      display:flex;
-      gap:14px;
-      align-items:center;
-    }
+    .header{ padding: 22px 22px 10px 22px; display:flex; gap:14px; align-items:center; }
     .logo{
-      width: 44px; height: 44px;
-      border-radius: 14px;
+      width: 44px; height: 44px; border-radius: 14px;
       background:
         radial-gradient(circle at 30% 30%, rgba(96,165,250,.9), rgba(59,130,246,.28) 55%, rgba(0,0,0,0) 66%),
         linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.02));
       border: 1px solid rgba(255,255,255,.18);
       box-shadow: 0 14px 40px rgba(59,130,246,.18);
     }
-    h1{
-      margin:0;
-      font-size: 18px;
-      letter-spacing: .2px;
-    }
-    .sub{
-      margin: 3px 0 0 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-
+    h1{ margin:0; font-size: 18px; letter-spacing: .2px; }
+    .sub{ margin: 3px 0 0 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
     .content{ padding: 0 22px 22px 22px; }
-
     .status{
-      margin: 10px 0 14px 0;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.04);
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.35;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      user-select:none;
+      margin: 10px 0 14px 0; padding: 10px 12px; border-radius: 14px;
+      border: 1px solid var(--stroke); background: rgba(255,255,255,.04);
+      color: var(--muted); font-size: 13px; line-height: 1.35;
+      display:flex; align-items:center; gap:10px; user-select:none;
     }
     .dot{
-      width: 10px; height: 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.22);
-      box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+      width: 10px; height: 10px; border-radius: 999px;
+      background: rgba(255,255,255,.22); box-shadow: 0 0 0 4px rgba(255,255,255,.06);
       flex: 0 0 auto;
     }
     .dot.ok{ background: rgba(34,197,94,.9); box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
     .dot.warn{ background: rgba(245,158,11,.9); box-shadow: 0 0 0 4px rgba(245,158,11,.15); }
     .dot.err{ background: rgba(239,68,68,.9); box-shadow: 0 0 0 4px rgba(239,68,68,.15); }
-
     .timer{
-      margin-left: auto;
-      padding: 4px 10px;
-      border-radius: 8px;
+      margin-left: auto; padding: 4px 10px; border-radius: 8px;
       background: rgba(255,255,255,.06);
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--blue2);
+      font-size: 11px; font-weight: 600; color: var(--blue2);
       display:none;
     }
-
-    .row{
-      display:grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    label{
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: -4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
+    .row{ display:grid; gap: 10px; margin-top: 14px; }
+    label{ font-size: 12px; color: var(--muted); margin-bottom: -4px; display:flex; align-items:center; gap:6px; }
     .field{ position:relative; }
-
     input{
-      width: 100%;
-      padding: 12px 104px 12px 12px;
-      border-radius: 16px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      outline: none;
-      font-size: 14px;
-      position: relative;
-      z-index: 1;
+      width: 100%; padding: 12px 104px 12px 12px;
+      border-radius: 16px; border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05); color: var(--text);
+      outline: none; font-size: 14px; position: relative; z-index: 1;
     }
-    input:focus{
-      border-color: rgba(96,165,250,.55);
-      box-shadow: 0 0 0 4px rgba(59,130,246,.15);
-    }
-
+    input:focus{ border-color: rgba(96,165,250,.55); box-shadow: 0 0 0 4px rgba(59,130,246,.15); }
     .field-actions{
-      position:absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 5;
-      display: flex;
-      gap: 6px;
+      position:absolute; right: 10px; top: 50%;
+      transform: translateY(-50%); z-index: 5;
+      display:flex; gap:6px;
     }
-
     .icon-btn{
-      border: 1px solid var(--stroke2);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      border-radius: 10px;
-      padding: 6px 9px;
-      font-size: 12px;
-      cursor:pointer;
-      user-select:none;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 34px;
-      min-height: 30px;
+      border: 1px solid var(--stroke2); background: rgba(255,255,255,.06); color: var(--text);
+      border-radius: 10px; padding: 6px 9px; font-size: 12px;
+      cursor:pointer; user-select:none; transition: all 0.2s ease;
+      display:flex; align-items:center; justify-content:center;
+      min-width: 34px; min-height: 30px;
     }
-    .icon-btn:hover{
-      background: rgba(255,255,255,.12);
-      border-color: var(--blue2);
-    }
-
+    .icon-btn:hover{ background: rgba(255,255,255,.12); border-color: var(--blue2); }
     .caps-warning{
-      display: none;
-      margin-top: 6px;
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: rgba(245,158,11,.12);
-      border: 1px solid rgba(245,158,11,.25);
-      color: var(--yellow);
-      font-size: 12px;
-      align-items: center;
-      gap: 8px;
+      display:none; margin-top: 6px; padding: 8px 10px; border-radius: 10px;
+      background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.25);
+      color: var(--yellow); font-size: 12px; align-items:center; gap:8px;
     }
-    .caps-warning.show{ display: flex; }
-
+    .caps-warning.show{ display:flex; }
     .requirements{
-      margin-top: 10px;
-      padding: 12px;
-      border-radius: 14px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid var(--stroke);
+      margin-top: 10px; padding: 12px; border-radius: 14px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--stroke);
     }
-    .req-title{
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-    .req-item{
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
+    .req-title{ font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+    .req-item{ display:flex; align-items:center; gap:8px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
     .req-item:last-child{ margin-bottom: 0; }
     .req-item.met{ color: var(--green); }
     .req-icon{
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
+      width: 16px; height: 16px; border-radius: 50%;
       border: 2px solid var(--muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      flex-shrink: 0;
+      display:flex; align-items:center; justify-content:center;
+      font-size: 10px; flex-shrink:0;
     }
-    .req-item.met .req-icon{
-      border-color: var(--green);
-      background: var(--green);
-      color: white;
-    }
-
-    .strength{
-      margin-top: 10px;
-      display:flex;
-      gap: 10px;
-      align-items:center;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .bar{
-      flex:1;
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      overflow:hidden;
-      border: 1px solid var(--stroke);
-    }
-    .fill{
-      height:100%;
-      width:0%;
-      background: var(--red);
-      transition: width .18s ease, background .3s ease;
-    }
+    .req-item.met .req-icon{ border-color: var(--green); background: var(--green); color:white; }
+    .strength{ margin-top: 10px; display:flex; gap:10px; align-items:center; color: var(--muted); font-size: 12px; }
+    .bar{ flex:1; height: 8px; border-radius: 999px; background: rgba(255,255,255,.08); overflow:hidden; border: 1px solid var(--stroke); }
+    .fill{ height:100%; width:0%; background: var(--red); transition: width .18s ease, background .3s ease; }
     .fill.weak{ background: var(--red); }
     .fill.ok{ background: var(--yellow); }
     .fill.good{ background: var(--blue); }
     .fill.strong{ background: var(--green); }
     .fill.very-strong{ background: linear-gradient(90deg, var(--green), var(--blue)); }
-
-    .actions{
-      margin-top: 16px;
-      display:grid;
-      gap: 10px;
-    }
-
+    .actions{ margin-top: 16px; display:grid; gap:10px; }
     button.primary{
-      width:100%;
-      padding: 12px 14px;
-      border: 0;
-      border-radius: 16px;
-      cursor:pointer;
+      width:100%; padding: 12px 14px; border:0; border-radius: 16px; cursor:pointer;
       background: linear-gradient(180deg, rgba(96,165,250,.95), rgba(59,130,246,.95));
-      color: #071022;
-      font-weight: 800;
-      letter-spacing: .2px;
+      color:#071022; font-weight:800; letter-spacing:.2px;
       box-shadow: 0 18px 45px rgba(59,130,246,.25);
-      transition: transform .08s ease, filter .2s ease;
-      font-size: 14px;
+      transition: transform .08s ease, filter .2s ease; font-size: 14px;
     }
     button.primary:hover{ filter: brightness(1.1); }
     button.primary:active{ transform: translateY(1px) scale(.995); }
     button.primary:disabled{ opacity:.55; cursor:not-allowed; filter:saturate(.8); }
-
     button.secondary{
-      background: transparent;
-      border: 1px solid var(--stroke);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 16px;
-      cursor:pointer;
-      font-size: 14px;
+      background: transparent; border: 1px solid var(--stroke); color: var(--text);
+      padding: 10px 14px; border-radius: 16px; cursor:pointer; font-size: 14px;
       transition: all 0.2s ease;
     }
-    button.secondary:hover{
-      background: rgba(255,255,255,.06);
-    }
-
+    button.secondary:hover{ background: rgba(255,255,255,.06); }
     .footer{
-      padding: 14px 22px 18px 22px;
-      border-top: 1px solid rgba(255,255,255,.08);
-      color: var(--muted);
-      font-size: 12px;
-      display:flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
+      padding: 14px 22px 18px 22px; border-top: 1px solid rgba(255,255,255,.08);
+      color: var(--muted); font-size: 12px; display:flex; justify-content: space-between; gap:10px; flex-wrap: wrap;
     }
-    a{ color: var(--blue2); text-decoration: none; }
+    a{ color: var(--blue2); text-decoration:none; }
     a:hover{ text-decoration: underline; }
-
-    .snackbar {
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
+    .snackbar{
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
       width: min(560px, calc(100% - 24px));
-      background: rgba(10,16,30,.85);
-      border: 1px solid rgba(255,255,255,.14);
-      color: var(--text);
-      border-radius: 16px;
-      padding: 12px 12px;
+      background: rgba(10,16,30,.85); border: 1px solid rgba(255,255,255,.14);
+      color: var(--text); border-radius: 16px; padding: 12px 12px;
       box-shadow: 0 20px 60px rgba(0,0,0,.55);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      display: none;
-      align-items: center;
-      gap: 10px;
-      z-index: 9999;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display:none; align-items:center; gap:10px; z-index:9999;
     }
-    .snackbar.show { display:flex; animation: pop .18s ease; }
-    @keyframes pop { from { transform: translateX(-50%) translateY(8px); opacity:.0 } to { transform: translateX(-50%) translateY(0); opacity:1 } }
-
-    .sb-dot{
-      width: 10px; height: 10px; border-radius: 999px;
-      background: rgba(255,255,255,.25);
-      box-shadow: 0 0 0 4px rgba(255,255,255,.08);
-      flex: 0 0 auto;
-    }
+    .snackbar.show{ display:flex; animation: pop .18s ease; }
+    @keyframes pop{ from{ transform: translateX(-50%) translateY(8px); opacity:0 } to{ transform: translateX(-50%) translateY(0); opacity:1 } }
+    .sb-dot{ width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.25); box-shadow: 0 0 0 4px rgba(255,255,255,.08); flex:0 0 auto; }
     .sb-dot.ok{ background: rgba(34,197,94,.95); box-shadow: 0 0 0 4px rgba(34,197,94,.16); }
     .sb-dot.err{ background: rgba(239,68,68,.95); box-shadow: 0 0 0 4px rgba(239,68,68,.16); }
     .sb-dot.info{ background: rgba(96,165,250,.95); box-shadow: 0 0 0 4px rgba(96,165,250,.16); }
-
     .sb-text{ flex:1; font-size: 13px; color: rgba(229,231,235,.95); white-space: pre-wrap; }
     .sb-btn{
       border: 1px solid rgba(255,255,255,.16);
@@ -358,49 +175,19 @@
       font-size: 12px;
       cursor:pointer;
     }
-
-    .hint{
-      font-size: 11px;
-      color: rgba(156,163,175,.7);
-      margin-top: 6px;
-    }
-
-    .success-screen{
-      display: none;
-      text-align: center;
-      padding: 20px 0;
-    }
-    .success-screen.show{ display: block; }
+    .hint{ font-size: 11px; color: rgba(156,163,175,.7); margin-top: 6px; }
+    .success-screen{ display:none; text-align:center; padding: 20px 0; }
+    .success-screen.show{ display:block; }
     .success-icon{
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 20px;
-      border-radius: 50%;
+      width:80px; height:80px; margin: 0 auto 20px; border-radius:50%;
       background: linear-gradient(135deg, rgba(34,197,94,.2), rgba(34,197,94,.05));
       border: 2px solid rgba(34,197,94,.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 40px;
-      animation: successPop 0.5s ease;
+      display:flex; align-items:center; justify-content:center;
+      font-size:40px; animation: successPop .5s ease;
     }
-    @keyframes successPop {
-      0% { transform: scale(0); opacity: 0; }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .success-title{
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 10px;
-    }
-    .success-text{
-      font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 24px;
-      line-height: 1.5;
-    }
+    @keyframes successPop{ 0%{ transform:scale(0); opacity:0 } 50%{ transform:scale(1.1) } 100%{ transform:scale(1); opacity:1 } }
+    .success-title{ font-size:20px; font-weight:700; color: var(--text); margin-bottom:10px; }
+    .success-text{ font-size:14px; color: var(--muted); margin-bottom:24px; line-height:1.5; }
   </style>
 </head>
 
@@ -464,7 +251,6 @@
         </div>
       </div>
 
-      <!-- Success Screen -->
       <div class="success-screen" id="successScreen">
         <div class="success-icon">✓</div>
         <div class="success-title">Password Updated!</div>
@@ -492,7 +278,6 @@
   </div>
 
 <script>
-  // ====== CONFIG ======
   const APP_DEEPLINK = "flightsstudio://resetdone";
   const SUPABASE_URL = "https://gdvhiudodnqdqhkyghsk.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -521,6 +306,10 @@
   const sbClose = $("sbClose");
   let sbTimer = null;
 
+  // RECOVERY gate storage and expiry
+  const RECOVERY_ALLOWED_KEY = "fs_recovery_allowed"; // stores { t: timestamp }
+  const RECOVERY_ALLOWED_TTL = 15 * 60 * 1000; // 15 minutes
+
   function showSnack(kind, text, timeoutMs = 3000) {
     sbText.textContent = text;
     sbDot.className = "sb-dot " + kind;
@@ -528,9 +317,7 @@
     if (sbTimer) clearTimeout(sbTimer);
     sbTimer = setTimeout(() => hideSnack(), timeoutMs);
   }
-  function hideSnack(){
-    snackbar.className = "snackbar";
-  }
+  function hideSnack(){ snackbar.className = "snackbar"; }
   sbClose.addEventListener("click", hideSnack);
 
   function setStatus(kind, text){
@@ -538,25 +325,18 @@
     statusDot.className = "dot " + kind;
   }
 
-  // ====== Close / Back to App ======
   backToAppBtn.addEventListener("click", () => {
     window.location.href = APP_DEEPLINK;
-    setTimeout(() => {
-      showSnack("info", "If the app didn’t open, open Flights Studio manually.", 5000);
-    }, 1200);
+    setTimeout(() => showSnack("info", "If the app didn’t open, open Flights Studio manually.", 5000), 1200);
   });
 
   closeTabBtn.addEventListener("click", () => {
     window.close();
-    setTimeout(() => {
-      showSnack("info", "You can now close this tab manually.", 4000);
-    }, 300);
+    setTimeout(() => showSnack("info", "You can now close this tab manually.", 4000), 300);
   });
 
   function focusPasswordField() {
-    setTimeout(() => {
-      if (pass && !pass.disabled) pass.focus();
-    }, 250);
+    setTimeout(() => { if (pass && !pass.disabled) pass.focus(); }, 250);
   }
 
   function showUrlErrorsIfAny() {
@@ -572,17 +352,13 @@
     }
   }
 
-  // ====== IMPORTANT: lock recovery to real URL hash ======
+  // Parse recovery info from hash
   function getRecoveryFromHash() {
-    const hash = window.location.hash.startsWith("#")
-      ? window.location.hash.substring(1)
-      : "";
+    const hash = window.location.hash.startsWith("#") ? window.location.hash.substring(1) : "";
     const params = new URLSearchParams(hash);
-
     const type = params.get("type");
     const accessToken = params.get("access_token");
     const refreshToken = params.get("refresh_token");
-
     const isRecovery = type === "recovery" && typeof accessToken === "string" && accessToken.length > 20;
     return { isRecovery, type, accessToken, refreshToken };
   }
@@ -594,81 +370,17 @@
     throw new Error("Supabase global not found");
   }
 
-  // ====== FIX: do NOT persist session on recovery page ======
+  // Use sessionStorage so refresh works, but closing tab clears it.
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       detectSessionInUrl: true,
-      persistSession: false,
-      autoRefreshToken: false
+      persistSession: true,
+      autoRefreshToken: true,
+      storage: window.sessionStorage
     }
   });
 
-  // ====== Password generator ======
-  function generatePassword() {
-    const length = 16;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const lower = "abcdefghijklmnopqrstuvwxyz";
-    const numbers = "0123456789";
-    const special = "!@#$%^&*";
-
-    let pwd = "";
-    pwd += upper[Math.floor(Math.random() * upper.length)];
-    pwd += lower[Math.floor(Math.random() * lower.length)];
-    pwd += numbers[Math.floor(Math.random() * numbers.length)];
-    pwd += special[Math.floor(Math.random() * special.length)];
-
-    for (let i = pwd.length; i < length; i++) {
-      pwd += charset[Math.floor(Math.random() * charset.length)];
-    }
-    return pwd.split('').sort(() => Math.random() - 0.5).join('');
-  }
-
-  $("generate").addEventListener("click", () => {
-    const newPwd = generatePassword();
-    pass.value = newPwd;
-    confirm.value = newPwd;
-    updateStrength();
-    checkRequirements();
-    showSnack("ok", "Strong password generated! ✨", 2000);
-    if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-  });
-
-  $("copy").addEventListener("click", async () => {
-    if (!pass.value) return showSnack("info", "No password to copy", 2000);
-    try {
-      await navigator.clipboard.writeText(pass.value);
-      showSnack("ok", "Password copied to clipboard! 📋", 2000);
-      if (navigator.vibrate) navigator.vibrate(50);
-    } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = pass.value;
-      textArea.style.position = "fixed";
-      textArea.style.opacity = "0";
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand("copy");
-        showSnack("ok", "Password copied to clipboard! 📋", 2000);
-      } catch {
-        showSnack("err", "Failed to copy password", 2000);
-      }
-      document.body.removeChild(textArea);
-    }
-  });
-
-  function bindToggle(toggleId, inputEl){
-    const t = $(toggleId);
-    t.addEventListener("click", () => {
-      const isPw = inputEl.type === "password";
-      inputEl.type = isPw ? "text" : "password";
-      t.textContent = isPw ? "🙈" : "👁️";
-      t.title = isPw ? "Hide password" : "Show password";
-    });
-  }
-  bindToggle("toggle1", pass);
-  bindToggle("toggle2", confirm);
-
+  // ====== Strength / requirements ======
   function checkCapsLock(e) {
     const isCapsLock = e.getModifierState && e.getModifierState("CapsLock");
     capsWarning.className = isCapsLock ? "caps-warning show" : "caps-warning";
@@ -689,8 +401,7 @@
     reqs.forEach(r => {
       const el = $(r.id);
       if (!el) return;
-      if (r.test) el.classList.add("met");
-      else el.classList.remove("met");
+      if (r.test) el.classList.add("met"); else el.classList.remove("met");
     });
   }
 
@@ -717,11 +428,57 @@
     fill.className = "fill " + classes[s];
     checkRequirements();
   }
-
   pass.addEventListener("input", updateStrength);
   updateStrength();
 
-  // ====== TRUE session timer (based on expires_at) ======
+  // ====== Toggles / generator / copy ======
+  function generatePassword() {
+    const length = 16;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const numbers = "0123456789";
+    const special = "!@#$%^&*";
+    let pwd = "";
+    pwd += upper[Math.floor(Math.random() * upper.length)];
+    pwd += lower[Math.floor(Math.random() * lower.length)];
+    pwd += numbers[Math.floor(Math.random() * numbers.length)];
+    pwd += special[Math.floor(Math.random() * special.length)];
+    for (let i = pwd.length; i < length; i++) pwd += charset[Math.floor(Math.random() * charset.length)];
+    return pwd.split("").sort(() => Math.random() - 0.5).join("");
+  }
+
+  $("generate").addEventListener("click", () => {
+    const newPwd = generatePassword();
+    pass.value = newPwd;
+    confirm.value = newPwd;
+    updateStrength();
+    checkRequirements();
+    showSnack("ok", "Strong password generated! ✨", 2000);
+  });
+
+  $("copy").addEventListener("click", async () => {
+    if (!pass.value) return showSnack("info", "No password to copy", 2000);
+    try {
+      await navigator.clipboard.writeText(pass.value);
+      showSnack("ok", "Password copied to clipboard! 📋", 2000);
+    } catch {
+      showSnack("err", "Failed to copy password", 2500);
+    }
+  });
+
+  function bindToggle(toggleId, inputEl){
+    const t = $(toggleId);
+    t.addEventListener("click", () => {
+      const isPw = inputEl.type === "password";
+      inputEl.type = isPw ? "text" : "password";
+      t.textContent = isPw ? "🙈" : "👁️";
+    });
+  }
+  bindToggle("toggle1", pass);
+  bindToggle("toggle2", confirm);
+
+  // ====== Real timer from session.expires_at ======
   let timerInterval = null;
 
   function stopTimer(){
@@ -730,12 +487,8 @@
     timer.style.display = "none";
   }
 
-  function startTimerFromSession(session) {
-    if (!session || !session.expires_at) {
-      stopTimer();
-      return;
-    }
-
+  function startTimerFromSession(session){
+    if (!session?.expires_at) { stopTimer(); return; }
     const expiresAtMs = session.expires_at * 1000;
     timer.style.display = "block";
 
@@ -750,96 +503,130 @@
         stopTimer();
         setStatus("err", "Session expired. Request a new reset link.");
         btn.disabled = true;
-        showSnack("err", "Session expired. Request a new reset link.", 6000);
-      } else if (remaining <= 60) {
-        timer.style.color = "var(--red)";
-      } else if (remaining <= 300) {
-        timer.style.color = "var(--yellow)";
-      } else {
-        timer.style.color = "var(--blue2)";
-      }
+      } else if (remaining <= 60) timer.style.color = "var(--red)";
+      else if (remaining <= 300) timer.style.color = "var(--yellow)";
+      else timer.style.color = "var(--blue2)";
     }, 1000);
   }
 
-  async function clearAuthStorageBestEffort(){
-    // persistSession is false, but still clean aggressively for safety
-    try {
-      await client.auth.signOut();
-    } catch {}
-
-    try {
-      // remove only supabase-ish keys (avoid nuking other sites)
-      const keys = Object.keys(localStorage);
-      keys.forEach(k => { if (k.toLowerCase().includes("supabase") || k.toLowerCase().includes("sb-")) localStorage.removeItem(k); });
-    } catch {}
-
-    try {
-      const keys2 = Object.keys(sessionStorage);
-      keys2.forEach(k => { if (k.toLowerCase().includes("supabase") || k.toLowerCase().includes("sb-")) sessionStorage.removeItem(k); });
-    } catch {}
+  async function getSession(){
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    return data?.session ?? null;
   }
 
-  async function waitForSession(maxTries = 10, delayMs = 250){
-    for (let i = 0; i < maxTries; i++){
-      const { data, error } = await client.auth.getSession();
-      if (error) throw error;
-      if (data?.session) return data.session;
-      await new Promise(r => setTimeout(r, delayMs));
+  function showSuccessUI(){
+    if (row) row.style.display = "none";
+    successScreen.className = "success-screen show";
+  }
+
+  // Recovery allowed helpers (with TTL)
+  function setRecoveryAllowed() {
+    try {
+      sessionStorage.setItem(RECOVERY_ALLOWED_KEY, JSON.stringify({ t: Date.now() }));
+    } catch {}
+  }
+  function removeRecoveryAllowed() {
+    try { sessionStorage.removeItem(RECOVERY_ALLOWED_KEY); } catch {}
+  }
+  function isRecoveryAllowed() {
+    try {
+      const raw = sessionStorage.getItem(RECOVERY_ALLOWED_KEY);
+      if (!raw) return false;
+      const obj = JSON.parse(raw);
+      if (!obj || typeof obj.t !== "number") return false;
+      return (Date.now() - obj.t) < RECOVERY_ALLOWED_TTL;
+    } catch {
+      return false;
     }
-    return null;
   }
 
+  // Hydrate session from tokens in hash (fallback when detectSessionInUrl didn't run)
+  async function tryHydrateSessionFromHash(rec) {
+    if (!rec || !rec.isRecovery) return null;
+    if (!rec.accessToken || !rec.refreshToken) return null;
+    try {
+      const { data, error } = await client.auth.setSession({
+        access_token: rec.accessToken,
+        refresh_token: rec.refreshToken
+      });
+      if (error) {
+        console.warn("setSession fallback failed:", error.message || error);
+        return null;
+      }
+      // Clear hash immediately to avoid token leakage via referrer/analytics
+      history.replaceState(null, "", window.location.pathname);
+      return data?.session || null;
+    } catch (e) {
+      console.warn("setSession fallback exception:", e);
+      return null;
+    }
+  }
+
+  // ====== KEY FLOW: updateBanner checks hash, session, tries hydration, starts timer ======
   async function updateBanner(){
     try{
       showUrlErrorsIfAny();
 
       const rec = getRecoveryFromHash();
 
-      // HARD GATE: no real recovery hash -> do NOT allow session detection
-      if (!rec.isRecovery) {
-        await clearAuthStorageBestEffort();
-        setStatus("warn", "No recovery link detected. Open the reset email link.");
+      // If hash currently indicates a recovery, mark tab allowed (with timestamp)
+      if (rec.isRecovery) setRecoveryAllowed();
+
+      const allowed = isRecoveryAllowed();
+
+      // If not allowed, do not try to detect session (prevents accidental cross-tab issues)
+      if (!allowed) {
+        await client.auth.signOut().catch(() => {});
+        setStatus("warn", "Open this page from the reset email link.");
         btn.disabled = true;
         stopTimer();
         return;
       }
 
-      // At this point, we *expect* a session to appear due to detectSessionInUrl
-      const session = await waitForSession();
+      // Try to get session normally (may have been detected by SDK)
+      let session = await getSession();
 
-      if (session){
-        setStatus("ok", "Recovery link verified. You can update your password.");
+      // Fallback: if session missing but we have tokens in hash, try hydrating
+      if (!session) {
+        const hydrated = await tryHydrateSessionFromHash(rec);
+        if (hydrated) session = hydrated;
+      }
+
+      if (session) {
+        setStatus("ok", "Recovery session verified. You can update your password.");
         btn.disabled = false;
         focusPasswordField();
         startTimerFromSession(session);
       } else {
-        // Hash says recovery, but session didn't load (expired / already used)
-        setStatus("err", "Reset link invalid or expired. Request a new reset link.");
+        setStatus("err", "Reset session missing/expired. Request a new reset link.");
         btn.disabled = true;
         stopTimer();
-        showSnack("err", "This reset link is invalid or expired. Request a new one.", 6500);
+        showSnack("err", "Session missing or expired. Request a new reset link.", 6500);
       }
+
     } catch(e){
       setStatus("err", "Failed to check session.");
-      showSnack("err", "Session check error: " + (e?.message || String(e)), 5500);
       btn.disabled = true;
       stopTimer();
+      showSnack("err", "Session check error: " + (e?.message || String(e)), 5500);
     }
   }
 
+  // Run on load
   updateBanner();
+
+  // Re-run when the hash changes (e.g., user opens a new recovery link in same tab)
+  window.addEventListener("hashchange", () => {
+    // small defer to ensure SDK state updated if detectSessionInUrl ran
+    setTimeout(updateBanner, 80);
+  });
 
   $("refreshLink").addEventListener("click", async (e) => {
     e.preventDefault();
     showSnack("info", "Refreshing…", 1200);
     await updateBanner();
-    if (!btn.disabled) showSnack("ok", "Session ready ✅", 1800);
   });
-
-  function showSuccessUI(){
-    if (row) row.style.display = "none";
-    successScreen.className = "success-screen show";
-  }
 
   async function doUpdate(){
     const p1 = pass.value || "";
@@ -848,21 +635,25 @@
     if (p1.length < 6) return showSnack("err", "Password must be at least 6 characters.", 3200);
     if (p1 !== p2) return showSnack("err", "Passwords do not match.", 3200);
 
-    // Must still be a recovery hash on screen
-    const rec = getRecoveryFromHash();
-    if (!rec.isRecovery) {
-      setStatus("warn", "No recovery link detected. Open the reset email link.");
+    const allowed = isRecoveryAllowed();
+    if (!allowed) {
+      setStatus("warn", "Open this page from the reset email link.");
       btn.disabled = true;
       stopTimer();
       return showSnack("err", "Open the reset email link again.", 5200);
     }
 
-    const session = await waitForSession(6, 250);
-    if (!session){
-      setStatus("err", "Reset link invalid or expired. Request a new reset link.");
+    // Ensure session exists; try hydration fallback once more
+    let session = await getSession();
+    if (!session) {
+      const rec = getRecoveryFromHash();
+      session = await tryHydrateSessionFromHash(rec);
+    }
+    if (!session) {
+      setStatus("err", "Reset session missing/expired. Request a new reset link.");
       btn.disabled = true;
       stopTimer();
-      return showSnack("err", "No recovery session. Request a new reset link.", 5500);
+      return showSnack("err", "Session missing/expired. Request a new reset link.", 5500);
     }
 
     btn.disabled = true;
@@ -870,13 +661,11 @@
 
     try{
       const { error } = await client.auth.updateUser({ password: p1 });
-
-      if (error){
-        showSnack("err", error.message, 6000);
-        setStatus("err", "Password update failed.");
+      if (error) {
         btn.disabled = false;
         btn.textContent = "Update password";
-        return;
+        setStatus("err", "Password update failed.");
+        return showSnack("err", error.message, 6500);
       }
 
       showSnack("ok", "✅ Password updated successfully!", 2500);
@@ -884,27 +673,21 @@
 
       stopTimer();
 
-      // Clear session + remove hash so refresh will NOT re-detect recovery
-      await clearAuthStorageBestEffort();
+      // End session and lock the tab again
+      await client.auth.signOut().catch(() => {});
+      removeRecoveryAllowed();
+
+      // Clean URL (remove hash) - safe-guard
       history.replaceState(null, "", window.location.pathname);
 
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-
-      setTimeout(() => {
-        showSuccessUI();
-        btn.textContent = "Updated";
-      }, 350);
-
-      // Optional auto-open the app (works better on mobile)
-      setTimeout(() => {
-        window.location.href = APP_DEEPLINK;
-      }, 1100);
+      setTimeout(() => { showSuccessUI(); btn.textContent = "Updated"; }, 350);
+      setTimeout(() => { window.location.href = APP_DEEPLINK; }, 1100);
 
     } catch(e){
-      showSnack("err", "Unexpected error: " + (e?.message || String(e)), 6000);
-      setStatus("err", "Unexpected error.");
       btn.disabled = false;
       btn.textContent = "Update password";
+      setStatus("err", "Unexpected error.");
+      showSnack("err", "Unexpected error: " + (e?.message || String(e)), 6000);
     }
   }
 
@@ -922,16 +705,13 @@
       e.preventDefault();
       if (!btn.disabled) doUpdate();
     }
-
     if (e.key === "Escape") {
       pass.value = "";
       confirm.value = "";
       updateStrength();
-      pass.blur();
-      confirm.blur();
+      pass.blur(); confirm.blur();
       showSnack("info", "Cleared", 1200);
     }
-
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "g") {
       e.preventDefault();
       $("generate").click();
