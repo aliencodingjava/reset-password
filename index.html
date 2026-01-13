@@ -586,9 +586,8 @@
       return null;
     }
   }
-
-async function updateBanner(){
-  try{
+async function updateBanner() {
+  try {
     showUrlErrorsIfAny();
 
     // 1) Try PKCE code first (new links)
@@ -623,13 +622,14 @@ async function updateBanner(){
       stopTimer();
       showSnack("err", "Session missing or expired. Request a new reset link.", 6500);
     }
-  } catch(e){
+  } catch (e) {
     setStatus("err", "Failed to check session.");
     btn.disabled = true;
     stopTimer();
     showSnack("err", "Session check error: " + (e?.message || String(e)), 5500);
   }
 }
+
 
 
   updateBanner();
