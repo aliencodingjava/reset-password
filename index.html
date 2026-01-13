@@ -418,7 +418,7 @@
       <div class="status" id="status">
         <div class="dot" id="statusDot"></div>
         <div id="statusText">Loading…</div>
-        <div class="timer" id="timer">15:00</div>
+        <div class="timer" id="timer">--:--</div>
       </div>
 
       <div class="row" id="row">
@@ -540,17 +540,13 @@
 
   // ====== Close / Back to App ======
   backToAppBtn.addEventListener("click", () => {
-    // Must be user gesture -> this is reliable
     window.location.href = APP_DEEPLINK;
-
-    // In case it doesn't open (desktop browsers)
     setTimeout(() => {
       showSnack("info", "If the app didn’t open, open Flights Studio manually.", 5000);
     }, 1200);
   });
 
   closeTabBtn.addEventListener("click", () => {
-    // Only works if tab was opened via script (usually won't from email)
     window.close();
     setTimeout(() => {
       showSnack("info", "You can now close this tab manually.", 4000);
@@ -560,7 +556,7 @@
   function focusPasswordField() {
     setTimeout(() => {
       if (pass && !pass.disabled) pass.focus();
-    }, 300);
+    }, 250);
   }
 
   function showUrlErrorsIfAny() {
@@ -571,9 +567,24 @@
     const desc = params.get("error_description") || "";
     if (err) {
       setStatus("err", "Link error. Request a new reset link.");
-      showSnack("err", (desc ? decodeURIComponent(desc) : err), 6000);
+      showSnack("err", (desc ? decodeURIComponent(desc) : err), 6500);
       btn.disabled = true;
     }
+  }
+
+  // ====== IMPORTANT: lock recovery to real URL hash ======
+  function getRecoveryFromHash() {
+    const hash = window.location.hash.startsWith("#")
+      ? window.location.hash.substring(1)
+      : "";
+    const params = new URLSearchParams(hash);
+
+    const type = params.get("type");
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+
+    const isRecovery = type === "recovery" && typeof accessToken === "string" && accessToken.length > 20;
+    return { isRecovery, type, accessToken, refreshToken };
   }
 
   if (!window.supabase || !window.supabase.createClient) {
@@ -583,10 +594,13 @@
     throw new Error("Supabase global not found");
   }
 
-  // ✅ Key change: persistSession false during recovery flow
-  // This avoids "session detected again" after refresh once we sign out.
+  // ====== FIX: do NOT persist session on recovery page ======
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
+    auth: {
+      detectSessionInUrl: true,
+      persistSession: false,
+      autoRefreshToken: false
+    }
   });
 
   // ====== Password generator ======
@@ -634,7 +648,7 @@
       document.body.appendChild(textArea);
       textArea.select();
       try {
-        document.execCommand('copy');
+        document.execCommand("copy");
         showSnack("ok", "Password copied to clipboard! 📋", 2000);
       } catch {
         showSnack("err", "Failed to copy password", 2000);
@@ -656,7 +670,7 @@
   bindToggle("toggle2", confirm);
 
   function checkCapsLock(e) {
-    const isCapsLock = e.getModifierState && e.getModifierState('CapsLock');
+    const isCapsLock = e.getModifierState && e.getModifierState("CapsLock");
     capsWarning.className = isCapsLock ? "caps-warning show" : "caps-warning";
   }
   pass.addEventListener("keydown", checkCapsLock);
@@ -707,25 +721,33 @@
   pass.addEventListener("input", updateStrength);
   updateStrength();
 
-  // ====== Session timer ======
-  let sessionStartTime = null;
+  // ====== TRUE session timer (based on expires_at) ======
   let timerInterval = null;
 
-  function startTimer() {
-    sessionStartTime = Date.now();
+  function stopTimer(){
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    timer.style.display = "none";
+  }
+
+  function startTimerFromSession(session) {
+    if (!session || !session.expires_at) {
+      stopTimer();
+      return;
+    }
+
+    const expiresAtMs = session.expires_at * 1000;
     timer.style.display = "block";
 
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
-      const remaining = Math.max(0, 900 - elapsed);
+      const remaining = Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
       const mins = Math.floor(remaining / 60);
       const secs = remaining % 60;
-      timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      timer.textContent = `${mins}:${secs.toString().padStart(2, "0")}`;
 
       if (remaining === 0) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+        stopTimer();
         setStatus("err", "Session expired. Request a new reset link.");
         btn.disabled = true;
         showSnack("err", "Session expired. Request a new reset link.", 6000);
@@ -739,7 +761,25 @@
     }, 1000);
   }
 
-  async function waitForSession(maxTries = 10, delayMs = 300){
+  async function clearAuthStorageBestEffort(){
+    // persistSession is false, but still clean aggressively for safety
+    try {
+      await client.auth.signOut();
+    } catch {}
+
+    try {
+      // remove only supabase-ish keys (avoid nuking other sites)
+      const keys = Object.keys(localStorage);
+      keys.forEach(k => { if (k.toLowerCase().includes("supabase") || k.toLowerCase().includes("sb-")) localStorage.removeItem(k); });
+    } catch {}
+
+    try {
+      const keys2 = Object.keys(sessionStorage);
+      keys2.forEach(k => { if (k.toLowerCase().includes("supabase") || k.toLowerCase().includes("sb-")) sessionStorage.removeItem(k); });
+    } catch {}
+  }
+
+  async function waitForSession(maxTries = 10, delayMs = 250){
     for (let i = 0; i < maxTries; i++){
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
@@ -753,21 +793,37 @@
     try{
       showUrlErrorsIfAny();
 
+      const rec = getRecoveryFromHash();
+
+      // HARD GATE: no real recovery hash -> do NOT allow session detection
+      if (!rec.isRecovery) {
+        await clearAuthStorageBestEffort();
+        setStatus("warn", "No recovery link detected. Open the reset email link.");
+        btn.disabled = true;
+        stopTimer();
+        return;
+      }
+
+      // At this point, we *expect* a session to appear due to detectSessionInUrl
       const session = await waitForSession();
+
       if (session){
-        setStatus("ok", "Recovery session detected. You can update your password.");
+        setStatus("ok", "Recovery link verified. You can update your password.");
         btn.disabled = false;
         focusPasswordField();
-        if (!timerInterval) startTimer();
+        startTimerFromSession(session);
       } else {
-        setStatus("warn", "No recovery session. Open this page from the reset email link.");
+        // Hash says recovery, but session didn't load (expired / already used)
+        setStatus("err", "Reset link invalid or expired. Request a new reset link.");
         btn.disabled = true;
-        timer.style.display = "none";
+        stopTimer();
+        showSnack("err", "This reset link is invalid or expired. Request a new one.", 6500);
       }
     } catch(e){
       setStatus("err", "Failed to check session.");
-      showSnack("err", "Session check error: " + (e?.message || String(e)), 5000);
+      showSnack("err", "Session check error: " + (e?.message || String(e)), 5500);
       btn.disabled = true;
+      stopTimer();
     }
   }
 
@@ -775,10 +831,9 @@
 
   $("refreshLink").addEventListener("click", async (e) => {
     e.preventDefault();
-    showSnack("info", "Refreshing session…", 1200);
+    showSnack("info", "Refreshing…", 1200);
     await updateBanner();
-    if (!btn.disabled) showSnack("ok", "Session ready ✅", 2000);
-    else showSnack("err", "Still no recovery session. Open the email reset link.", 5000);
+    if (!btn.disabled) showSnack("ok", "Session ready ✅", 1800);
   });
 
   function showSuccessUI(){
@@ -793,11 +848,21 @@
     if (p1.length < 6) return showSnack("err", "Password must be at least 6 characters.", 3200);
     if (p1 !== p2) return showSnack("err", "Passwords do not match.", 3200);
 
-    const session = await waitForSession(4, 250);
-    if (!session){
-      setStatus("warn", "No recovery session. Open the reset email link.");
+    // Must still be a recovery hash on screen
+    const rec = getRecoveryFromHash();
+    if (!rec.isRecovery) {
+      setStatus("warn", "No recovery link detected. Open the reset email link.");
       btn.disabled = true;
-      return showSnack("err", "No recovery session. Click the reset email link again.", 5500);
+      stopTimer();
+      return showSnack("err", "Open the reset email link again.", 5200);
+    }
+
+    const session = await waitForSession(6, 250);
+    if (!session){
+      setStatus("err", "Reset link invalid or expired. Request a new reset link.");
+      btn.disabled = true;
+      stopTimer();
+      return showSnack("err", "No recovery session. Request a new reset link.", 5500);
     }
 
     btn.disabled = true;
@@ -817,25 +882,23 @@
       showSnack("ok", "✅ Password updated successfully!", 2500);
       setStatus("ok", "Password updated. You can close this tab.");
 
-      if (timerInterval) clearInterval(timerInterval);
-      timerInterval = null;
-      timer.style.display = "none";
+      stopTimer();
 
-      // ✅ IMPORTANT: clear local session + clear hash so refresh doesn't re-detect it
-      await client.auth.signOut();
-      history.replaceState(null, "", window.location.pathname + window.location.search);
+      // Clear session + remove hash so refresh will NOT re-detect recovery
+      await clearAuthStorageBestEffort();
+      history.replaceState(null, "", window.location.pathname);
 
       if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
 
       setTimeout(() => {
         showSuccessUI();
         btn.textContent = "Updated";
-      }, 450);
+      }, 350);
 
       // Optional auto-open the app (works better on mobile)
       setTimeout(() => {
         window.location.href = APP_DEEPLINK;
-      }, 1200);
+      }, 1100);
 
     } catch(e){
       showSnack("err", "Unexpected error: " + (e?.message || String(e)), 6000);
