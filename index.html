@@ -118,18 +118,6 @@
       display:none;
     }
 
-    /* Loading skeleton */
-    .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.1) 50%, rgba(255,255,255,.05) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 12px;
-    }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
     .row{
       display:grid;
       gap: 10px;
@@ -486,7 +474,7 @@
         </div>
         <div class="actions">
           <button class="primary" id="backToApp" type="button">Back to App 🚀</button>
-          <button class="secondary" type="button" onclick="window.close()">Close Tab</button>
+          <button class="secondary" id="closeTab" type="button">Close Tab</button>
         </div>
       </div>
     </div>
@@ -504,7 +492,7 @@
   </div>
 
 <script>
-  // ✅ FIXED: Consistent variable name
+  // ====== CONFIG ======
   const APP_DEEPLINK = "flightsstudio://resetdone";
   const SUPABASE_URL = "https://gdvhiudodnqdqhkyghsk.supabase.co";
   const SUPABASE_ANON_KEY =
@@ -524,9 +512,9 @@
   const capsWarning = $("capsWarning");
   const successScreen = $("successScreen");
   const backToAppBtn = $("backToApp");
+  const closeTabBtn = $("closeTab");
   const row = $("row");
 
-  // Snackbar
   const snackbar = $("snackbar");
   const sbDot = $("sbDot");
   const sbText = $("sbText");
@@ -550,21 +538,31 @@
     statusDot.className = "dot " + kind;
   }
 
-  // ✅ FIXED: Use correct variable name
+  // ====== Close / Back to App ======
   backToAppBtn.addEventListener("click", () => {
+    // Must be user gesture -> this is reliable
     window.location.href = APP_DEEPLINK;
+
+    // In case it doesn't open (desktop browsers)
+    setTimeout(() => {
+      showSnack("info", "If the app didn’t open, open Flights Studio manually.", 5000);
+    }, 1200);
   });
 
-  // Auto-focus password field when ready
+  closeTabBtn.addEventListener("click", () => {
+    // Only works if tab was opened via script (usually won't from email)
+    window.close();
+    setTimeout(() => {
+      showSnack("info", "You can now close this tab manually.", 4000);
+    }, 300);
+  });
+
   function focusPasswordField() {
     setTimeout(() => {
-      if (pass && !pass.disabled) {
-        pass.focus();
-      }
+      if (pass && !pass.disabled) pass.focus();
     }, 300);
   }
 
-  // If opened with #error=... in URL, show it nicely
   function showUrlErrorsIfAny() {
     const hash = window.location.hash || "";
     if (!hash.startsWith("#")) return;
@@ -585,11 +583,13 @@
     throw new Error("Supabase global not found");
   }
 
+  // ✅ Key change: persistSession false during recovery flow
+  // This avoids "session detected again" after refresh once we sign out.
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
   });
 
-  // Password generator with better entropy
+  // ====== Password generator ======
   function generatePassword() {
     const length = 16;
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
@@ -599,18 +599,14 @@
     const special = "!@#$%^&*";
 
     let pwd = "";
-    // Guarantee each type
     pwd += upper[Math.floor(Math.random() * upper.length)];
     pwd += lower[Math.floor(Math.random() * lower.length)];
     pwd += numbers[Math.floor(Math.random() * numbers.length)];
     pwd += special[Math.floor(Math.random() * special.length)];
 
-    // Fill remaining
     for (let i = pwd.length; i < length; i++) {
       pwd += charset[Math.floor(Math.random() * charset.length)];
     }
-
-    // Shuffle
     return pwd.split('').sort(() => Math.random() - 0.5).join('');
   }
 
@@ -621,42 +617,32 @@
     updateStrength();
     checkRequirements();
     showSnack("ok", "Strong password generated! ✨", 2000);
-    
-    // Vibrate on mobile (if supported)
-    if (navigator.vibrate) {
-      navigator.vibrate([50, 30, 50]);
-    }
+    if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
   });
 
-  // Copy password with fallback
   $("copy").addEventListener("click", async () => {
-    if (pass.value) {
+    if (!pass.value) return showSnack("info", "No password to copy", 2000);
+    try {
+      await navigator.clipboard.writeText(pass.value);
+      showSnack("ok", "Password copied to clipboard! 📋", 2000);
+      if (navigator.vibrate) navigator.vibrate(50);
+    } catch {
+      const textArea = document.createElement("textarea");
+      textArea.value = pass.value;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
       try {
-        await navigator.clipboard.writeText(pass.value);
+        document.execCommand('copy');
         showSnack("ok", "Password copied to clipboard! 📋", 2000);
-        if (navigator.vibrate) navigator.vibrate(50);
       } catch {
-        // Fallback for older browsers
-        const textArea = document.createElement("textarea");
-        textArea.value = pass.value;
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand('copy');
-          showSnack("ok", "Password copied to clipboard! 📋", 2000);
-        } catch {
-          showSnack("err", "Failed to copy password", 2000);
-        }
-        document.body.removeChild(textArea);
+        showSnack("err", "Failed to copy password", 2000);
       }
-    } else {
-      showSnack("info", "No password to copy", 2000);
+      document.body.removeChild(textArea);
     }
   });
 
-  // Toggle visibility
   function bindToggle(toggleId, inputEl){
     const t = $(toggleId);
     t.addEventListener("click", () => {
@@ -669,7 +655,6 @@
   bindToggle("toggle1", pass);
   bindToggle("toggle2", confirm);
 
-  // Caps lock detection
   function checkCapsLock(e) {
     const isCapsLock = e.getModifierState && e.getModifierState('CapsLock');
     capsWarning.className = isCapsLock ? "caps-warning show" : "caps-warning";
@@ -679,7 +664,6 @@
   confirm.addEventListener("keydown", checkCapsLock);
   confirm.addEventListener("keyup", checkCapsLock);
 
-  // Requirements checker
   function checkRequirements() {
     const p = pass.value || "";
     const reqs = [
@@ -696,7 +680,6 @@
     });
   }
 
-  // ✅ IMPROVED: Better strength scoring
   function strengthScore(p){
     let s = 0;
     if (!p) return 0;
@@ -710,25 +693,21 @@
     return Math.min(5, Math.floor(s / 1.4));
   }
 
-  // ✅ IMPROVED: Gradient colors based on strength
   function updateStrength(){
     const p = pass.value || "";
     const s = strengthScore(p);
     fill.style.width = ((s / 5) * 100) + "%";
-    
     const labels = ["—", "Weak", "OK", "Good", "Strong", "Very strong"];
     const classes = ["", "weak", "ok", "good", "strong", "very-strong"];
-    
     strengthText.textContent = "Strength: " + labels[s];
     fill.className = "fill " + classes[s];
-    
     checkRequirements();
   }
 
   pass.addEventListener("input", updateStrength);
   updateStrength();
 
-  // Session timer (15 minutes)
+  // ====== Session timer ======
   let sessionStartTime = null;
   let timerInterval = null;
 
@@ -740,7 +719,6 @@
     timerInterval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
       const remaining = Math.max(0, 900 - elapsed);
-
       const mins = Math.floor(remaining / 60);
       const secs = remaining % 60;
       timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -774,12 +752,12 @@
   async function updateBanner(){
     try{
       showUrlErrorsIfAny();
-      const session = await waitForSession();
 
+      const session = await waitForSession();
       if (session){
         setStatus("ok", "Recovery session detected. You can update your password.");
         btn.disabled = false;
-        focusPasswordField(); // ✅ Auto-focus
+        focusPasswordField();
         if (!timerInterval) startTimer();
       } else {
         setStatus("warn", "No recovery session. Open this page from the reset email link.");
@@ -795,7 +773,6 @@
 
   updateBanner();
 
-  // Refresh link
   $("refreshLink").addEventListener("click", async (e) => {
     e.preventDefault();
     showSnack("info", "Refreshing session…", 1200);
@@ -803,6 +780,11 @@
     if (!btn.disabled) showSnack("ok", "Session ready ✅", 2000);
     else showSnack("err", "Still no recovery session. Open the email reset link.", 5000);
   });
+
+  function showSuccessUI(){
+    if (row) row.style.display = "none";
+    successScreen.className = "success-screen show";
+  }
 
   async function doUpdate(){
     const p1 = pass.value || "";
@@ -832,30 +814,28 @@
         return;
       }
 
-      // Success
       showSnack("ok", "✅ Password updated successfully!", 2500);
-      setStatus("ok", "Password updated successfully.");
+      setStatus("ok", "Password updated. You can close this tab.");
 
       if (timerInterval) clearInterval(timerInterval);
       timerInterval = null;
       timer.style.display = "none";
 
-      // Vibrate on success
-      if (navigator.vibrate) {
-        navigator.vibrate([100, 50, 100, 50, 200]);
-      }
+      // ✅ IMPORTANT: clear local session + clear hash so refresh doesn't re-detect it
+      await client.auth.signOut();
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
 
       setTimeout(() => {
-        if (row) row.style.display = "none";
-        successScreen.className = "success-screen show";
-        btn.disabled = true;
+        showSuccessUI();
         btn.textContent = "Updated";
-      }, 700);
+      }, 450);
 
-      // ✅ FIXED: Use correct variable name
+      // Optional auto-open the app (works better on mobile)
       setTimeout(() => {
         window.location.href = APP_DEEPLINK;
-      }, 2200);
+      }, 1200);
 
     } catch(e){
       showSnack("err", "Unexpected error: " + (e?.message || String(e)), 6000);
@@ -874,7 +854,6 @@
     showSnack("info", "Fields cleared", 1500);
   });
 
-  // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (document.activeElement === pass || document.activeElement === confirm)) {
       e.preventDefault();
@@ -898,4 +877,3 @@
 </script>
 </body>
 </html>
-
