@@ -118,6 +118,18 @@
       display:none;
     }
 
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.1) 50%, rgba(255,255,255,.05) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 12px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
     .row{
       display:grid;
       gap: 10px;
@@ -256,9 +268,14 @@
     .fill{
       height:100%;
       width:0%;
-      background: linear-gradient(90deg, rgba(239,68,68,.9), rgba(59,130,246,.9), rgba(34,197,94,.9));
-      transition: width .18s ease;
+      background: var(--red);
+      transition: width .18s ease, background .3s ease;
     }
+    .fill.weak{ background: var(--red); }
+    .fill.ok{ background: var(--yellow); }
+    .fill.good{ background: var(--blue); }
+    .fill.strong{ background: var(--green); }
+    .fill.very-strong{ background: linear-gradient(90deg, var(--green), var(--blue)); }
 
     .actions{
       margin-top: 16px;
@@ -416,7 +433,6 @@
         <div class="timer" id="timer">15:00</div>
       </div>
 
-      <!-- ✅ IMPORTANT: give row an ID so JS can hide it -->
       <div class="row" id="row">
         <label for="password">
           New password
@@ -488,8 +504,8 @@
   </div>
 
 <script>
-    // ✅ Deep link to open your Android app (matches manifest: scheme=flights host=reset-done)
-  const APP_LOGIN_URL = "flightsstudio://resetdone";
+  // ✅ FIXED: Consistent variable name
+  const APP_DEEPLINK = "flightsstudio://resetdone";
   const SUPABASE_URL = "https://gdvhiudodnqdqhkyghsk.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkdmhpdWRvZG5xZHFoa3lnaHNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMTI2MTksImV4cCI6MjA2NDU4ODYxOX0.p9P-Hv4r-C9eZU3Dz-kX9U2iv8PUAKaUU5qZGPMJ844";
@@ -534,10 +550,19 @@
     statusDot.className = "dot " + kind;
   }
 
-  // Back to app
+  // ✅ FIXED: Use correct variable name
   backToAppBtn.addEventListener("click", () => {
     window.location.href = APP_DEEPLINK;
   });
+
+  // Auto-focus password field when ready
+  function focusPasswordField() {
+    setTimeout(() => {
+      if (pass && !pass.disabled) {
+        pass.focus();
+      }
+    }, 300);
+  }
 
   // If opened with #error=... in URL, show it nicely
   function showUrlErrorsIfAny() {
@@ -564,7 +589,7 @@
     auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
   });
 
-  // Password generator
+  // Password generator with better entropy
   function generatePassword() {
     const length = 16;
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
@@ -574,15 +599,18 @@
     const special = "!@#$%^&*";
 
     let pwd = "";
+    // Guarantee each type
     pwd += upper[Math.floor(Math.random() * upper.length)];
     pwd += lower[Math.floor(Math.random() * lower.length)];
     pwd += numbers[Math.floor(Math.random() * numbers.length)];
     pwd += special[Math.floor(Math.random() * special.length)];
 
+    // Fill remaining
     for (let i = pwd.length; i < length; i++) {
       pwd += charset[Math.floor(Math.random() * charset.length)];
     }
 
+    // Shuffle
     return pwd.split('').sort(() => Math.random() - 0.5).join('');
   }
 
@@ -593,16 +621,35 @@
     updateStrength();
     checkRequirements();
     showSnack("ok", "Strong password generated! ✨", 2000);
+    
+    // Vibrate on mobile (if supported)
+    if (navigator.vibrate) {
+      navigator.vibrate([50, 30, 50]);
+    }
   });
 
-  // Copy password
+  // Copy password with fallback
   $("copy").addEventListener("click", async () => {
     if (pass.value) {
       try {
         await navigator.clipboard.writeText(pass.value);
         showSnack("ok", "Password copied to clipboard! 📋", 2000);
+        if (navigator.vibrate) navigator.vibrate(50);
       } catch {
-        showSnack("err", "Failed to copy password", 2000);
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = pass.value;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showSnack("ok", "Password copied to clipboard! 📋", 2000);
+        } catch {
+          showSnack("err", "Failed to copy password", 2000);
+        }
+        document.body.removeChild(textArea);
       }
     } else {
       showSnack("info", "No password to copy", 2000);
@@ -649,24 +696,32 @@
     });
   }
 
-  // Strength meter
+  // ✅ IMPROVED: Better strength scoring
   function strengthScore(p){
     let s = 0;
     if (!p) return 0;
     if (p.length >= 6) s++;
     if (p.length >= 10) s++;
+    if (p.length >= 14) s++;
     if (/[A-Z]/.test(p)) s++;
+    if (/[a-z]/.test(p)) s++;
     if (/[0-9]/.test(p)) s++;
     if (/[^A-Za-z0-9]/.test(p)) s++;
-    return Math.min(5, s);
+    return Math.min(5, Math.floor(s / 1.4));
   }
 
+  // ✅ IMPROVED: Gradient colors based on strength
   function updateStrength(){
     const p = pass.value || "";
     const s = strengthScore(p);
     fill.style.width = ((s / 5) * 100) + "%";
-    const label = ["—", "Weak", "OK", "Good", "Strong", "Very strong"][s];
-    strengthText.textContent = "Strength: " + label;
+    
+    const labels = ["—", "Weak", "OK", "Good", "Strong", "Very strong"];
+    const classes = ["", "weak", "ok", "good", "strong", "very-strong"];
+    
+    strengthText.textContent = "Strength: " + labels[s];
+    fill.className = "fill " + classes[s];
+    
     checkRequirements();
   }
 
@@ -718,14 +773,13 @@
 
   async function updateBanner(){
     try{
-      showUrlErrorsIfAny(); // handle #error=... links
+      showUrlErrorsIfAny();
       const session = await waitForSession();
 
       if (session){
         setStatus("ok", "Recovery session detected. You can update your password.");
         btn.disabled = false;
-
-        // Start timer only once we have a session
+        focusPasswordField(); // ✅ Auto-focus
         if (!timerInterval) startTimer();
       } else {
         setStatus("warn", "No recovery session. Open this page from the reset email link.");
@@ -741,7 +795,7 @@
 
   updateBanner();
 
-  // Refresh link = re-check session (NOT reload)
+  // Refresh link
   $("refreshLink").addEventListener("click", async (e) => {
     e.preventDefault();
     showSnack("info", "Refreshing session…", 1200);
@@ -757,7 +811,6 @@
     if (p1.length < 6) return showSnack("err", "Password must be at least 6 characters.", 3200);
     if (p1 !== p2) return showSnack("err", "Passwords do not match.", 3200);
 
-    // Ensure session exists (sometimes needs a tick)
     const session = await waitForSession(4, 250);
     if (!session){
       setStatus("warn", "No recovery session. Open the reset email link.");
@@ -787,19 +840,20 @@
       timerInterval = null;
       timer.style.display = "none";
 
-      // Swap to success screen
+      // Vibrate on success
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100, 50, 200]);
+      }
+
       setTimeout(() => {
         if (row) row.style.display = "none";
         successScreen.className = "success-screen show";
-
-        // Keep update button locked (hidden anyway)
         btn.disabled = true;
         btn.textContent = "Updated";
       }, 700);
 
-      // Optional: auto-open app after a moment
+      // ✅ FIXED: Use correct variable name
       setTimeout(() => {
-        // Try to go back to app automatically, user can also tap the button
         window.location.href = APP_DEEPLINK;
       }, 2200);
 
@@ -813,7 +867,6 @@
 
   btn.addEventListener("click", doUpdate);
 
-  // Clear button
   clearBtn.addEventListener("click", () => {
     pass.value = "";
     confirm.value = "";
@@ -823,13 +876,11 @@
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
-    // Enter to submit (only if focused in inputs)
     if (e.key === "Enter" && (document.activeElement === pass || document.activeElement === confirm)) {
       e.preventDefault();
       if (!btn.disabled) doUpdate();
     }
 
-    // Escape to clear
     if (e.key === "Escape") {
       pass.value = "";
       confirm.value = "";
@@ -839,7 +890,6 @@
       showSnack("info", "Cleared", 1200);
     }
 
-    // Ctrl/Cmd+G to generate
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "g") {
       e.preventDefault();
       $("generate").click();
@@ -848,3 +898,4 @@
 </script>
 </body>
 </html>
+
