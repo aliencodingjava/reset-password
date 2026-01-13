@@ -8,7 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    /* --- your original CSS unchanged --- */
     :root{
       --bg0:#060813; --bg1:#0B1220;
       --card: rgba(14,22,41,.72);
@@ -306,9 +305,9 @@
   const sbClose = $("sbClose");
   let sbTimer = null;
 
-  // RECOVERY gate storage and expiry
-  const RECOVERY_ALLOWED_KEY = "fs_recovery_allowed"; // stores { t: timestamp }
-  const RECOVERY_ALLOWED_TTL = 15 * 60 * 1000; // 15 minutes
+  // Allow within this tab only
+  const RECOVERY_ALLOWED_KEY = "fs_recovery_allowed";
+  const RECOVERY_ALLOWED_TTL = 60 * 60 * 1000; // 1 hour
 
   function showSnack(kind, text, timeoutMs = 3000) {
     sbText.textContent = text;
@@ -339,6 +338,21 @@
     setTimeout(() => { if (pass && !pass.disabled) pass.focus(); }, 250);
   }
 
+  function setRecoveryAllowed() {
+    try { sessionStorage.setItem(RECOVERY_ALLOWED_KEY, JSON.stringify({ t: Date.now() })); } catch {}
+  }
+  function removeRecoveryAllowed() {
+    try { sessionStorage.removeItem(RECOVERY_ALLOWED_KEY); } catch {}
+  }
+  function isRecoveryAllowed() {
+    try {
+      const raw = sessionStorage.getItem(RECOVERY_ALLOWED_KEY);
+      if (!raw) return false;
+      const obj = JSON.parse(raw);
+      return obj && typeof obj.t === "number" && (Date.now() - obj.t) < RECOVERY_ALLOWED_TTL;
+    } catch { return false; }
+  }
+
   function showUrlErrorsIfAny() {
     const hash = window.location.hash || "";
     if (!hash.startsWith("#")) return;
@@ -352,7 +366,7 @@
     }
   }
 
-  // Parse recovery info from hash
+  // OLD implicit recovery hash support
   function getRecoveryFromHash() {
     const hash = window.location.hash.startsWith("#") ? window.location.hash.substring(1) : "";
     const params = new URLSearchParams(hash);
@@ -360,7 +374,25 @@
     const accessToken = params.get("access_token");
     const refreshToken = params.get("refresh_token");
     const isRecovery = type === "recovery" && typeof accessToken === "string" && accessToken.length > 20;
-    return { isRecovery, type, accessToken, refreshToken };
+    return { isRecovery, accessToken, refreshToken };
+  }
+
+  // NEW PKCE code support (?code=... or #code=...)
+  function getCodeFromUrl() {
+    const url = new URL(window.location.href);
+    const qsCode = url.searchParams.get("code");
+    if (qsCode) return qsCode;
+
+    const hash = window.location.hash.startsWith("#") ? window.location.hash.substring(1) : "";
+    const hp = new URLSearchParams(hash);
+    return hp.get("code");
+  }
+
+  function cleanUrlAll() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("code");
+    // remove hash entirely (tokens/code/errors)
+    history.replaceState(null, "", url.pathname + (url.searchParams.toString() ? "?" + url.searchParams.toString() : ""));
   }
 
   if (!window.supabase || !window.supabase.createClient) {
@@ -370,7 +402,7 @@
     throw new Error("Supabase global not found");
   }
 
-  // Use sessionStorage so refresh works, but closing tab clears it.
+  // ✅ sessionStorage so refresh works in same tab; closing tab clears it.
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       detectSessionInUrl: true,
@@ -380,7 +412,6 @@
     }
   });
 
-  // ====== Strength / requirements ======
   function checkCapsLock(e) {
     const isCapsLock = e.getModifierState && e.getModifierState("CapsLock");
     capsWarning.className = isCapsLock ? "caps-warning show" : "caps-warning";
@@ -392,13 +423,12 @@
 
   function checkRequirements() {
     const p = pass.value || "";
-    const reqs = [
+    [
       { id: "req-length", test: p.length >= 6 },
       { id: "req-upper",  test: /[A-Z]/.test(p) },
       { id: "req-lower",  test: /[a-z]/.test(p) },
       { id: "req-number", test: /[0-9]/.test(p) }
-    ];
-    reqs.forEach(r => {
+    ].forEach(r => {
       const el = $(r.id);
       if (!el) return;
       if (r.test) el.classList.add("met"); else el.classList.remove("met");
@@ -431,7 +461,6 @@
   pass.addEventListener("input", updateStrength);
   updateStrength();
 
-  // ====== Toggles / generator / copy ======
   function generatePassword() {
     const length = 16;
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
@@ -478,20 +507,16 @@
   bindToggle("toggle1", pass);
   bindToggle("toggle2", confirm);
 
-  // ====== Real timer from session.expires_at ======
   let timerInterval = null;
-
   function stopTimer(){
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = null;
     timer.style.display = "none";
   }
-
   function startTimerFromSession(session){
     if (!session?.expires_at) { stopTimer(); return; }
     const expiresAtMs = session.expires_at * 1000;
     timer.style.display = "block";
-
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
       const remaining = Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
@@ -520,77 +545,68 @@
     successScreen.className = "success-screen show";
   }
 
-  // Recovery allowed helpers (with TTL)
-  function setRecoveryAllowed() {
+  // ✅ PKCE exchange (NEW LINKS)
+  async function tryExchangeCodeForSession() {
+    const code = getCodeFromUrl();
+    if (!code) return null;
     try {
-      sessionStorage.setItem(RECOVERY_ALLOWED_KEY, JSON.stringify({ t: Date.now() }));
-    } catch {}
-  }
-  function removeRecoveryAllowed() {
-    try { sessionStorage.removeItem(RECOVERY_ALLOWED_KEY); } catch {}
-  }
-  function isRecoveryAllowed() {
-    try {
-      const raw = sessionStorage.getItem(RECOVERY_ALLOWED_KEY);
-      if (!raw) return false;
-      const obj = JSON.parse(raw);
-      if (!obj || typeof obj.t !== "number") return false;
-      return (Date.now() - obj.t) < RECOVERY_ALLOWED_TTL;
-    } catch {
-      return false;
+      const { data, error } = await client.auth.exchangeCodeForSession(code);
+      if (error) {
+        console.warn("exchangeCodeForSession failed:", error.message);
+        return null;
+      }
+      setRecoveryAllowed();
+      cleanUrlAll();
+      return data?.session ?? null;
+    } catch (e) {
+      console.warn("exchangeCodeForSession exception:", e);
+      return null;
     }
   }
 
-  // Hydrate session from tokens in hash (fallback when detectSessionInUrl didn't run)
-  async function tryHydrateSessionFromHash(rec) {
-    if (!rec || !rec.isRecovery) return null;
-    if (!rec.accessToken || !rec.refreshToken) return null;
+  // ✅ Implicit setSession fallback (OLD LINKS)
+  async function trySetSessionFromHash() {
+    const rec = getRecoveryFromHash();
+    if (!rec.isRecovery) return null;
+    setRecoveryAllowed();
+    if (!rec.refreshToken) return null; // need both for setSession
     try {
       const { data, error } = await client.auth.setSession({
         access_token: rec.accessToken,
         refresh_token: rec.refreshToken
       });
       if (error) {
-        console.warn("setSession fallback failed:", error.message || error);
+        console.warn("setSession failed:", error.message);
         return null;
       }
-      // Clear hash immediately to avoid token leakage via referrer/analytics
-      history.replaceState(null, "", window.location.pathname);
-      return data?.session || null;
+      cleanUrlAll();
+      return data?.session ?? null;
     } catch (e) {
-      console.warn("setSession fallback exception:", e);
+      console.warn("setSession exception:", e);
       return null;
     }
   }
 
-  // ====== KEY FLOW: updateBanner checks hash, session, tries hydration, starts timer ======
   async function updateBanner(){
     try{
       showUrlErrorsIfAny();
 
-      const rec = getRecoveryFromHash();
+      // 1) Try PKCE code first (new links)
+      let session = await tryExchangeCodeForSession();
 
-      // If hash currently indicates a recovery, mark tab allowed (with timestamp)
-      if (rec.isRecovery) setRecoveryAllowed();
+      // 2) If no PKCE session, try normal session
+      if (!session) session = await getSession();
+
+      // 3) If still none, try implicit hash fallback (old links)
+      if (!session) session = await trySetSessionFromHash();
 
       const allowed = isRecoveryAllowed();
 
-      // If not allowed, do not try to detect session (prevents accidental cross-tab issues)
       if (!allowed) {
-        await client.auth.signOut().catch(() => {});
         setStatus("warn", "Open this page from the reset email link.");
         btn.disabled = true;
         stopTimer();
         return;
-      }
-
-      // Try to get session normally (may have been detected by SDK)
-      let session = await getSession();
-
-      // Fallback: if session missing but we have tokens in hash, try hydrating
-      if (!session) {
-        const hydrated = await tryHydrateSessionFromHash(rec);
-        if (hydrated) session = hydrated;
       }
 
       if (session) {
@@ -604,7 +620,6 @@
         stopTimer();
         showSnack("err", "Session missing or expired. Request a new reset link.", 6500);
       }
-
     } catch(e){
       setStatus("err", "Failed to check session.");
       btn.disabled = true;
@@ -613,14 +628,8 @@
     }
   }
 
-  // Run on load
   updateBanner();
-
-  // Re-run when the hash changes (e.g., user opens a new recovery link in same tab)
-  window.addEventListener("hashchange", () => {
-    // small defer to ensure SDK state updated if detectSessionInUrl ran
-    setTimeout(updateBanner, 80);
-  });
+  window.addEventListener("hashchange", () => setTimeout(updateBanner, 80));
 
   $("refreshLink").addEventListener("click", async (e) => {
     e.preventDefault();
@@ -635,20 +644,18 @@
     if (p1.length < 6) return showSnack("err", "Password must be at least 6 characters.", 3200);
     if (p1 !== p2) return showSnack("err", "Passwords do not match.", 3200);
 
-    const allowed = isRecoveryAllowed();
-    if (!allowed) {
+    if (!isRecoveryAllowed()) {
       setStatus("warn", "Open this page from the reset email link.");
       btn.disabled = true;
       stopTimer();
       return showSnack("err", "Open the reset email link again.", 5200);
     }
 
-    // Ensure session exists; try hydration fallback once more
+    // ensure session exists; try PKCE exchange again if user opened link after load
     let session = await getSession();
-    if (!session) {
-      const rec = getRecoveryFromHash();
-      session = await tryHydrateSessionFromHash(rec);
-    }
+    if (!session) session = await tryExchangeCodeForSession();
+    if (!session) session = await trySetSessionFromHash();
+
     if (!session) {
       setStatus("err", "Reset session missing/expired. Request a new reset link.");
       btn.disabled = true;
@@ -670,15 +677,11 @@
 
       showSnack("ok", "✅ Password updated successfully!", 2500);
       setStatus("ok", "Password updated. You can close this tab.");
-
       stopTimer();
 
-      // End session and lock the tab again
       await client.auth.signOut().catch(() => {});
       removeRecoveryAllowed();
-
-      // Clean URL (remove hash) - safe-guard
-      history.replaceState(null, "", window.location.pathname);
+      cleanUrlAll();
 
       setTimeout(() => { showSuccessUI(); btn.textContent = "Updated"; }, 350);
       setTimeout(() => { window.location.href = APP_DEEPLINK; }, 1100);
